@@ -22,8 +22,10 @@ namespace IdentityService
             if (user == null)
                 return;
 
-            // Add name claim
-            var claims = new List<Claim> { new Claim(JwtClaimTypes.Name, user.UserName) };
+
+            var claims = new List<Claim> { new Claim(JwtClaimTypes.Name, user.UserName) , // Add name claim
+            new Claim (JwtClaimTypes.Email, user.Email) ,//Add email claim
+            };
 
             // Add role claims
             var roles = await _userManager.GetRolesAsync(user);

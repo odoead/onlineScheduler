@@ -4,7 +4,7 @@
     {
 
         public int Id { get; set; }
-        public int DurationTime { get; set; }
+        public TimeSpan DurationTime { get; set; }
         public string Title { get; set; }
     }
 }

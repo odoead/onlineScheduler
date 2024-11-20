@@ -7,12 +7,15 @@ namespace CompanyService.Entities
     {
         [Key]
         public int Id { get; set; }
-        public int DurationTime { get; set; }
-        public string Title { get; set; }
-
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public TimeSpan Duration { get; set; }
 
         [ForeignKey("CompanyId")]
         public Company Company { get; set; }
         public int CompanyId { get; set; }
+        public List<ProductWorker> AssignedWorkers { get; set; }
+        public List<Booking> Bookings { get; set; }
+
     }
 }

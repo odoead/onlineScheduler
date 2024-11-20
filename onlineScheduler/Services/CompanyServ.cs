@@ -6,30 +6,40 @@ using CompanyService.Interfaces;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data;
+using Shared.Events.User;
 using Shared.Exceptions.custom_exceptions;
-using Shared.Messages.Company;
 
 namespace CompanyService.Services
 {
     public class CompanyServ : ICompanyService
     {
-        private readonly Context _context;
+        private readonly Context dbcontext;
         private readonly IPublishEndpoint _publishEndpoint;
+        IRequestClient<UserEmailRequested> _client;
+        private readonly IBookingValidationService bookingValidator;
 
-        public CompanyServ(Context context, IPublishEndpoint publishEndpoint)
+        public CompanyServ(Context context, IPublishEndpoint publishEndpoint, IRequestClient<UserEmailRequested> client, IBookingValidationService bookingValidator)
         {
-            _context = context;
+            dbcontext = context;
             _publishEndpoint = publishEndpoint;
+            _client = client;
+            this.bookingValidator = bookingValidator;
         }
 
 
-        public async Task<int> AddCompanyAsync(CreateCompanyDTO companyDTO)
+        public async Task<int> AddCompanyAsync(CreateCompanyDTO companyDTO, string ownerEmail)
         {
+
             var location = new Location
             {
                 Coordinates = new NpgsqlTypes.NpgsqlPoint { X = companyDTO.Longitude, Y = companyDTO.Latitude }
             };
             var timeZoneOffset = TimezoneConverter.GetTimezoneFromLocation(companyDTO.Longitude, companyDTO.Latitude).BaseUtcOffset;
+
+            var ownerData = await GetUserData(ownerEmail);
+            await CheckAndAddWorkers(new List<UserEmailRequestResult> { ownerData });
+
+
             Company company = companyDTO.CompanyType switch
             {
                 (int)CompanyType.Personal => new PersonalCompany
@@ -38,9 +48,8 @@ namespace CompanyService.Services
                     Description = companyDTO.Description,
                     OpeningTimeLOC = companyDTO.OpeningTimeLOC,
                     ClosingTimeLOC = companyDTO.ClosingTimeLOC,
-                    CompanyType = CompanyType.Personal,
-                    OwnerId = companyDTO.OwnerId,
-                    WorkerId = companyDTO.OwnerId,
+                    OwnerId = ownerData.Id,
+                    WorkerId = ownerData.Id,
                     Location = location,
                     TimeZoneFromUTCOffset = timeZoneOffset,
                     Products = new List<Product>(),
@@ -52,25 +61,27 @@ namespace CompanyService.Services
                     Description = companyDTO.Description,
                     OpeningTimeLOC = companyDTO.OpeningTimeLOC,
                     ClosingTimeLOC = companyDTO.ClosingTimeLOC,
-                    CompanyType = CompanyType.Shared,
-                    OwnerId = companyDTO.OwnerId,
+                    OwnerId = ownerData.Id,
                     Location = location,
                     TimeZoneFromUTCOffset = timeZoneOffset,
-                    Workers = await _context.Users
-                        .Where(u => companyDTO.EmployeeIds.Contains(u.Id))
-                        .Select(u => new CompanyWorkers { WorkerId = u.Id })
-                        .ToListAsync(),
+                    Workers = new List<CompanyWorker>
+                {
+                    new CompanyWorker { WorkerId = ownerData.Id }
+                },
                     Products = new List<Product>(),
                     WorkingDays = companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
-
                 },
                 _ => throw new BadRequestException("Invalid company type.")
             };
+            await dbcontext.Companies.AddAsync(company);
+            await dbcontext.SaveChangesAsync();
 
-            _context.Companies.Add(company);
-            await _context.SaveChangesAsync();
+            var newSchedules = CreateScheduleForWorkers(new List<string> { ownerData.Id }, company.Id, companyDTO.OpeningTimeLOC, companyDTO.ClosingTimeLOC,
+                companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList());
 
-            await _publishEndpoint.Publish(new CompanyCreated
+            await dbcontext.ScheduleIntervals.AddRangeAsync(newSchedules);
+            await dbcontext.SaveChangesAsync();
+            /*await _publishEndpoint.Publish(new CompanyCreated
             {
                 CompanyId = company.Id,
                 CompanyName = company.Name,
@@ -80,56 +91,110 @@ namespace CompanyService.Services
                 EmployeeIds = companyDTO.EmployeeIds,
                 OpeningTimeLOC = company.OpeningTimeLOC,
                 WorkingDays = companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList()
-            });
+            });*/
 
             return company.Id;
         }
 
+
+
+
         public async Task<bool> DeleteCompanyAsync(int companyId)
         {
-            var company = await _context.Companies.FindAsync(companyId);
-            if (company == null) return false;
 
-            _context.Companies.Remove(company);
-            await _context.SaveChangesAsync();
+            var company = await dbcontext.Companies.FindAsync(companyId) ?? throw new BadRequestException("Company doesnt exist. Id: " + companyId);
 
-            await _publishEndpoint.Publish(new CompanyDeleted
+            // Check for active bookings
+            if (await bookingValidator.HasActiveBookingsCompany(companyId))
+            {
+                throw new BadRequestException("Cannot remove company with active bookings");
+            }
+
+            dbcontext.Companies.Remove(company);
+            await dbcontext.SaveChangesAsync();
+
+            /*await _publishEndpoint.Publish(new CompanyDeleted
             {
                 CompanyId = companyId,
-            });
+            });*/
 
             return true;
         }
 
-        public async Task<bool> UpdateCompanyEmployeesAsync(int companyId, List<string> employeeIds)
+        public async Task AddEmployeesToCompany(int companyId, List<string> UserEmails)
         {
-            var company = await _context.Companies.FindAsync(companyId);
-            if (company == null) return false;
+            var company = await dbcontext.SharedCompanies.Include(q => q.Workers).Include(c => c.ScheduleIntervals)
+                .FirstOrDefaultAsync(q => q.Id == companyId) ?? throw new BadRequestException("Company doesnt exist. Id: " + companyId);
 
-            var employees = await _context.Users.Where(u => employeeIds.Contains(u.Id)).ToListAsync();
-            if (company is SharedCompany sharedCompany)
+            List<UserEmailRequestResult> responseUsers = new();
+            foreach (var email in UserEmails)
             {
-                sharedCompany.Workers = employees.Select(e => new CompanyWorkers { CompanyID = company.Id, WorkerId = e.Id }).ToList();
-                _context.Companies.Update(sharedCompany);
-                await _context.SaveChangesAsync();
+                var response = await GetUserData(email);
+                responseUsers.Add(response);
             }
 
-            await _publishEndpoint.Publish(new UpdatedCompanyEmployees
+            if (!responseUsers.Select(u => u.Id).Except(company.Workers.Select(w => w.WorkerId)).ToList().Any())//workers already added to company
+            { return; }
+            await CheckAndAddWorkers(responseUsers);
+
+            var newWorkerIds = responseUsers.Select(u => u.Id).Except(company.Workers.Select(w => w.WorkerId)).ToList();
+            foreach (var id in newWorkerIds)
+            {
+                company.Workers.Add(new CompanyWorker { CompanyID = company.Id, WorkerId = id, });
+            }
+
+            var schedules = CreateScheduleForWorkers(newWorkerIds, companyId, company.OpeningTimeLOC, company.OpeningTimeLOC, company.WorkingDays);
+
+
+            await dbcontext.ScheduleIntervals.AddRangeAsync(schedules);
+            await dbcontext.SaveChangesAsync();
+            /*await _publishEndpoint.Publish(new UpdatedCompanyEmployees
             {
                 CompanyId = companyId,
-                EmployeeIds = employeeIds,
+                EmployeeIds = responseUsers.Select(q=>q.Id).ToList(),
                 ClosingTimeLOC = company.ClosingTimeLOC,
                 OpeningTimeLOC = company.OpeningTimeLOC,
                 WorkingDays = company.WorkingDays,
-            });
+            });*/
+        }
+
+        public async Task<bool> RemoveEmployeeFromCompany(int companyId, string workerId)
+        {
+            var company = await dbcontext.SharedCompanies
+                .Include(c => c.Workers)
+                .FirstOrDefaultAsync(c => c.Id == companyId)
+                ?? throw new BadRequestException("Company doesn't exist. Id: " + companyId);
+
+            if (company.OwnerId == workerId)
+            {
+                throw new BadRequestException("Cannot remove the company owner. Comany: " + company.Name + " |Owner: " + workerId);
+            }
+
+            var workerAssignment = company.Workers
+                .FirstOrDefault(w => w.WorkerId == workerId)
+                ?? throw new BadRequestException("Worker not found in company");
+
+            // Check for active bookings
+            if (await bookingValidator.HasActiveBookingsWorker(workerId))
+            {
+                throw new BadRequestException("Cannot remove worker with active bookings");
+            }
+
+            company.Workers.Remove(workerAssignment);
+
+            // Remove schedule intervals
+            var scheduleIntervals = await dbcontext.ScheduleIntervals
+                .Where(si => si.CompanyId == companyId && si.WorkerId == workerId)
+                .ToListAsync();
+            dbcontext.ScheduleIntervals.RemoveRange(scheduleIntervals);
+            await dbcontext.SaveChangesAsync();
 
             return true;
         }
 
-
         public async Task<GetCompanyDTO> GetCompany(int companyId)
         {
-            var company = await _context.Companies.Include(q => q.Owner)
+            var company = await dbcontext.Companies.Include(q => q.Owner).Include(q => q.Location)
                 .Include(q => ((SharedCompany)q).Workers).ThenInclude(q => q.Worker)
                 .Include(q => ((PersonalCompany)q).Worker)
                 .Where(q => q.Id == companyId).FirstOrDefaultAsync();
@@ -140,24 +205,75 @@ namespace CompanyService.Services
                 Description = company.Description,
                 OpeningTimeLOC = company.OpeningTimeLOC,
                 ClosingTimeLOC = company.ClosingTimeLOC,
-                CompanyType = company.CompanyType,
                 OwnerId = company.OwnerId,
                 OwnerName = company.Owner.FullName,
-                Employees = new(),
                 Longitude = company.Location.Coordinates.X,
                 Latitude = company.Location.Coordinates.Y,
             };
-            dto.Products = company.Products.Select(p => new ProductDTO { DurationTime = p.DurationTime, Id = p.Id, Title = p.Title }).ToList();
+            dto.Products = company.Products.Select(p => new ProductDTO { DurationTime = p.Duration, Id = p.Id, Title = p.Name, }).ToList();
             if (company is SharedCompany sharedCompany)
             {
-                dto.Employees = sharedCompany.Workers.Select(w => new UserDTO { FullName = w.Worker.FullName, Id = w.WorkerId, UserType = w.Worker.UserType }).ToList();
+                dto.Workers = sharedCompany.Workers.Select(w => new WorkerMinDTO { FullName = w.Worker.FullName, Id = w.WorkerId, }).ToList();
             }
             else if (company is PersonalCompany personalCompany)
             {
-                dto.Employees = new List<UserDTO> { new UserDTO { FullName = personalCompany.Worker.FullName, Id = personalCompany.WorkerId, UserType = personalCompany.Worker.UserType } };
+                dto.Workers = new List<WorkerMinDTO> { new WorkerMinDTO { FullName = personalCompany.Worker.FullName, Id = personalCompany.WorkerId } };
             }
 
             return dto;
+        }
+
+        private async Task CheckAndAddWorkers(List<UserEmailRequestResult> responseUsers)
+        {
+            var existingWorkers = await dbcontext.Workers
+                .Where(w => responseUsers.Select(r => r.Id).Contains(w.IdentityServiceId))
+                .ToListAsync();
+
+            foreach (var user in responseUsers)
+            {
+                if (!existingWorkers.Any(w => w.IdentityServiceId == user.Id))
+                {
+                    var newWorker = new Worker
+                    {
+                        IdentityServiceId = user.Id,
+                        FullName = user.UserName,
+                    };
+                    await dbcontext.Workers.AddAsync(newWorker);
+                }
+            }
+            await dbcontext.SaveChangesAsync();
+        }
+
+        private List<ScheduleInterval> CreateScheduleForWorkers(List<string> workerIds, int companyId, TimeSpan startTime, TimeSpan finishTime, List<DayOfTheWeek> weekday)
+        {
+            List<ScheduleInterval> scheduleIntervals = new();
+            foreach (var id in workerIds)
+            {
+                foreach (var day in weekday)
+                {
+                    scheduleIntervals.Add(new ScheduleInterval
+                    { WorkerId = id, CompanyId = companyId, StartTimeLOC = startTime, WeekDay = (int)day, IntervalType = IntervalType.Work, FinishTimeLOC = finishTime, });
+
+                }
+            }
+            return scheduleIntervals;
+        }
+
+        private async Task<UserEmailRequestResult> GetUserData(string email)
+        {
+            var response = await _client.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = email });
+            switch (response)
+            {
+                case var r when r.Message is UserEmailRequestResult result:
+                    return result;
+
+                case var r when r.Message is UserEmailRequestedNotFoundResult notFoundResult:
+                    throw new BadRequestException("User with email " + email + " not found");
+
+                default:
+                    throw new InvalidOperationException("Unknown response type received.");
+            }
+
         }
 
     }

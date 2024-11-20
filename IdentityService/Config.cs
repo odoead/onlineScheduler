@@ -9,6 +9,7 @@ public static class Config
         {
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
+            new IdentityResources.Email(),
             new IdentityResource("roles", new List<string> { "role" })
 
         };
@@ -47,7 +48,7 @@ public static class Config
                 AllowedCorsOrigins = { "http://localhost:4200" },
                 RequireConsent = false,
                 AccessTokenLifetime = 600,
-                AllowedScopes = { "openid", "profile", "api", "roles" },
+                AllowedScopes = { "openid", "profile", "api", "roles", },
             },
             new Client
             {

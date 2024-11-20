@@ -1,4 +1,6 @@
-﻿namespace CompanyService.DTO
+﻿using Shared.Data;
+
+namespace CompanyService.DTO
 {
     public class GetCompanyDTO
     {
@@ -10,7 +12,7 @@
         public string OwnerId { get; set; }
         public string OwnerName { get; set; }
         public List<ProductDTO> Products { get; set; }
-        public List<UserDTO> Employees { get; set; }
+        public List<WorkerMinDTO> Workers { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }

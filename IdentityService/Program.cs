@@ -1,4 +1,6 @@
 ﻿using IdentityService;
+using IdentityService.Consumers;
+using MassTransit;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -29,6 +31,22 @@ try
         Log.Information("Done seeding database. Exiting.");
         return;
     }
+
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddConsumersFromNamespaceContaining<UserEmailRequestedConsumer>();
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["RabbitMq:Host"], "/", host =>
+            {
+                host.Username(builder.Configuration.GetValue("RabbitMq:Username", "guest"));
+                host.Password(builder.Configuration.GetValue("RabbitMq:Password", "guest"));
+            });
+            cfg.ConfigureEndpoints(context);
+        });
+
+
+    });
 
     app.Run();
 }

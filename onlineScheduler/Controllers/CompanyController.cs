@@ -1,4 +1,3 @@
-using CompanyService.DTO;
 using CompanyService.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +14,12 @@ namespace onlineScheduler.Controllers
             _companyService = companyService;
         }
 
-        [HttpPost]
+        /*[HttpPost]
         public async Task<IActionResult> AddCompany([FromBody] CreateCompanyDTO company)
         {
             var companyId = await _companyService.AddCompanyAsync(company);
             return Ok(companyId);
-        }
+        }*/
 
         [HttpDelete("{companyId:int}")]
         public async Task<IActionResult> DeleteCompany(int companyId)
@@ -30,12 +29,12 @@ namespace onlineScheduler.Controllers
             return Ok();
         }
 
-        [HttpPut("updateemployees/{companyId:int}")]
+        /*[HttpPut("updateemployees/{companyId:int}")]
         public async Task<IActionResult> UpdateCompanyEmployees(int companyId, [FromBody] List<string> employeeIds)
         {
             var result = await _companyService.UpdateCompanyEmployeesAsync(companyId, employeeIds);
             if (!result) return NotFound();
             return Ok();
-        }
+        }*/
     }
 }

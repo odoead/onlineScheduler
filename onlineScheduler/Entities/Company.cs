@@ -13,13 +13,14 @@ namespace CompanyService.Entities
         public TimeSpan OpeningTimeLOC { get; set; }
         public TimeSpan ClosingTimeLOC { get; set; }
         [ForeignKey("OwnerId")]
-        public User Owner { get; set; }
+        public Worker Owner { get; set; }
         public string OwnerId { get; set; }
         public List<Product> Products { get; set; }
         public Location Location { get; set; }
         public TimeSpan TimeZoneFromUTCOffset { get; set; }
-        [NotMapped]
-        public CompanyType CompanyType { get; set; }
+        public List<ScheduleInterval> ScheduleIntervals { get; set; }
+        // [NotMapped]
+        //public CompanyType CompanyType { get; set; }
         [Column("WorkingDaysSerialized")]
         public string NotUseWorkingDaysSerialized { get; set; }
         [NotMapped]
@@ -39,16 +40,14 @@ namespace CompanyService.Entities
 
     public class SharedCompany : Company
     {
-
-
-        public List<CompanyWorkers> Workers { get; set; }
+        public List<CompanyWorker> Workers { get; set; }
     }
 
     public class PersonalCompany : Company
     {
 
         [ForeignKey("WorkerId")]
-        public User Worker { get; set; }
+        public Worker Worker { get; set; }
         public string WorkerId { get; set; }
     }
 
