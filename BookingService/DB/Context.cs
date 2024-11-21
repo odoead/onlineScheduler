@@ -22,7 +22,9 @@ namespace BookingService.DB
             .Property(e => e.Status)
             .HasConversion<int>();
 
-
+            builder.Entity<Booking>()
+            .Property(e => e.Service)
+            .HasConversion<int>();
 
         }
 

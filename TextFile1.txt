@@ -1,0 +1,14 @@
+Auth Service
+Company Management Service(company,product schedule )
+admindata Service ?
+Notification Service
+
+booking service 
+	booker data
+	worker data 
+	datetime create 
+	product 
+
+
+
+olx-like management service 
