@@ -1,5 +1,8 @@
+using CompanyService.DTO;
 using CompanyService.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace onlineScheduler.Controllers
 {
@@ -7,34 +10,62 @@ namespace onlineScheduler.Controllers
     [Route("api/[controller]")]
     public class CompanyController : ControllerBase
     {
-        private readonly ICompanyService _companyService;
+        private readonly ICompanyService companyService;
 
         public CompanyController(ICompanyService companyService)
         {
-            _companyService = companyService;
+            this.companyService = companyService;
         }
 
-        /*[HttpPost]
-        public async Task<IActionResult> AddCompany([FromBody] CreateCompanyDTO company)
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> AddCompany([FromBody] CreateCompanyDTO createCompanyDTO)
         {
-            var companyId = await _companyService.AddCompanyAsync(company);
-            return Ok(companyId);
-        }*/
+            var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
 
-        [HttpDelete("{companyId:int}")]
+            var companyId = await companyService.AddCompanyAsync(
+                    createCompanyDTO.Name,
+                    createCompanyDTO.Description,
+                    createCompanyDTO.OpeningTimeLOC,
+                    createCompanyDTO.ClosingTimeLOC,
+                    createCompanyDTO.CompanyType,
+                    createCompanyDTO.WorkingDays,
+                    createCompanyDTO.Latitude,
+                    createCompanyDTO.Longitude,
+                    emailClaim);
+            return Ok(companyId);
+        }
+
+        [HttpDelete("{companyId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteCompany(int companyId)
         {
-            var result = await _companyService.DeleteCompanyAsync(companyId);
-            if (!result) return NotFound();
+            var result = await companyService.DeleteCompanyAsync(companyId);
+            return NoContent();
+        }
+
+        [HttpPost("{companyId}/employees")]
+        [Authorize]
+        public async Task<IActionResult> AddEmployeesToCompany(int companyId, [FromBody] List<string> userEmails)
+        {
+            await companyService.AddEmployeesToCompany(companyId, userEmails);
             return Ok();
         }
 
-        /*[HttpPut("updateemployees/{companyId:int}")]
-        public async Task<IActionResult> UpdateCompanyEmployees(int companyId, [FromBody] List<string> employeeIds)
+        [HttpDelete("{companyId}/employees/{workerId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveEmployeeFromCompany(int companyId, string workerId)
         {
-            var result = await _companyService.UpdateCompanyEmployeesAsync(companyId, employeeIds);
-            if (!result) return NotFound();
-            return Ok();
-        }*/
+            var result = await companyService.RemoveEmployeeFromCompany(companyId, workerId);
+            return NoContent();
+        }
+
+        [HttpGet("{companyId}")]
+        [Authorize]
+        public async Task<IActionResult> GetCompany(int companyId)
+        {
+            var company = await companyService.GetCompany(companyId);
+            return Ok(company);
+        }
     }
 }
