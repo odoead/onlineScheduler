@@ -24,15 +24,15 @@ namespace CompanyService.Services
             _publishEndpoint = publishEndpoint;
             this.bookingValidator = bookingValidator;
         }
-        public async Task<int> AddProductAsync(string Name, string Description, TimeSpan Duration, int CompanyId, List<string> WorkerIds)
+        public async Task<int> AddProductAsync(CreateProductDTO productDto)
         {
             var product = new Product
             {
-                Name = Name,
-                Description = Description,
-                Duration = Duration,
-                CompanyId = CompanyId,
-                AssignedWorkers = WorkerIds.Select(wId => new ProductWorker { WorkerId = wId }).ToList(),
+                Name = productDto.Name,
+                Description = productDto.Description,
+                Duration = productDto.Duration,
+                CompanyId = productDto.CompanyId,
+                AssignedWorkers = productDto.WorkerIds.Select(wId => new ProductWorker { WorkerId = wId }).ToList(),
             };
 
             dbcontext.Products.Add(product);
@@ -67,7 +67,12 @@ namespace CompanyService.Services
             return product;
         }
 
-        public async Task UpdateProductAsync(int id, string Name, string Description, TimeSpan Duration, List<string> WorkerIds)
+
+
+
+
+        // Update Product
+        public async Task UpdateProductAsync(int id, UpdateProductDTO productDto)
         {
             var product = await dbcontext.Products.FindAsync(id) ?? throw new NotFoundException("Product not found with that id " + id);
 
@@ -76,10 +81,10 @@ namespace CompanyService.Services
                 throw new BadRequestException("Cannot remove product with active bookings. Id: " + id);
             }
 
-            product.Name = Name;
-            product.Description = Description;
-            product.Duration = Duration;
-            product.AssignedWorkers = WorkerIds.Select(wId => new ProductWorker { WorkerId = wId }).ToList();
+            product.Name = productDto.Name;
+            product.Description = productDto.Description;
+            product.Duration = productDto.Duration;
+            product.AssignedWorkers = productDto.WorkerIds.Select(wId => new ProductWorker { WorkerId = wId }).ToList();
 
             await dbcontext.SaveChangesAsync();
 
@@ -93,6 +98,7 @@ namespace CompanyService.Services
             });*/
         }
 
+        // Delete Product
         public async Task DeleteProductAsync(int id)
         {
             var product = await dbcontext.Products.FindAsync(id) ?? throw new NotFoundException("Product not found " + id);

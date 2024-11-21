@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NotificationService.Consumers;
 using NotificationService.DB;
-using NotificationService.Interfaces;
 using Shared.Events.Company;
 using Shared.Events.User;
-using E = NotificationService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<INotificationService, E.NotificationService>();
+//builder.Services.AddScoped<ICompanyService, CompanyServ>();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumersFromNamespaceContaining<BookingCreatedConsumer>();

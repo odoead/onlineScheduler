@@ -13,7 +13,6 @@ namespace BookingService.Entities
         public BookingStatus Status { get; set; } = BookingStatus.Created;
         public DateTime StartDateLOC { get; set; }
         public DateTime? EndDateLOC { get; set; }
-        public ServiceType Service { get; set; }
 
 
 
@@ -21,6 +20,7 @@ namespace BookingService.Entities
     }
     public enum ServiceType
     {
-        Schedule
+        DidikiLike,
+        OlxLike
     }
 }

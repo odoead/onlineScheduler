@@ -22,26 +22,27 @@ namespace CompanyService.Services
             _publishEndpoint = publishEndpoint;
             bookingValidation = validationService;
         }
-        public async Task<int> AddIntervalAsync(int WeekDay, TimeSpan StartTimeLOC, TimeSpan FinishTimeLOC, int IntervalType, string EmployeeId, int CompanyId)
+        public async Task<int> AddIntervalAsync(AddScheduleIntervalDTO interval)
         {
 
-            if (await IsOverlappingIntervalAsync(StartTimeLOC, FinishTimeLOC, WeekDay, EmployeeId))
+            if (await IsOverlappingIntervalAsync(interval.StartTimeLOC, interval.FinishTimeLOC, interval.WeekDay, interval.EmployeeId))
             {
                 throw new BadRequestException("This interval overlaps with an existing interval.");
             }
-            if (await IsIntervalInCompanyWorkHoursRange(CompanyId, StartTimeLOC, FinishTimeLOC))
+
+            if (await IsIntervalInCompanyWorkHoursRange(interval.CompanyId, interval.StartTimeLOC, interval.FinishTimeLOC))
             {
                 throw new BadRequestException("Interval is out of the company working hours bounds ");
             }
 
             var scheduleInterval = new ScheduleInterval
             {
-                WeekDay = ((int)(DayOfTheWeek)WeekDay),
-                StartTimeLOC = StartTimeLOC,
-                FinishTimeLOC = FinishTimeLOC,
-                IntervalType = ((IntervalType)IntervalType),
-                WorkerId = EmployeeId,
-                CompanyId = CompanyId,
+                WeekDay = ((int)(DayOfTheWeek)interval.WeekDay),
+                StartTimeLOC = interval.StartTimeLOC,
+                FinishTimeLOC = interval.FinishTimeLOC,
+                IntervalType = ((IntervalType)interval.IntervalType),
+                WorkerId = interval.EmployeeId,
+                CompanyId = interval.CompanyId,
             };
 
             dbcontext.ScheduleIntervals.Add(scheduleInterval);
@@ -51,18 +52,22 @@ namespace CompanyService.Services
         }
 
 
-        public async Task<bool> UpdateIntervalAsync(int Id, TimeSpan StartTimeLOC, TimeSpan FinishTimeLOC)
+        public async Task<bool> UpdateIntervalAsync(UpdateScheduleIntervalDTO updateInterval)
         {
             var interval = await dbcontext.ScheduleIntervals.Include(q => q.Company).Include(q => q.Bookings).Include(q => q.Worker).ThenInclude(q => q.CompanyWorkAssignments).ThenInclude(q => q.Company)
-                .Where(q => q.Id == Id).FirstOrDefaultAsync();
+                .Where(q => q.Id == updateInterval.Id).FirstOrDefaultAsync();
             if (interval == null) return false;
+
 
             var UTCOffset = interval.Company.TimeZoneFromUTCOffset;
 
-            var hasActiveBookings = interval.Bookings.Any(b => b.EndDateLOC >= DateTime.UtcNow + UTCOffset);
+
+            var hasActiveBookings = interval.Bookings
+        .Any(b => b.EndDateLOC >= DateTime.UtcNow + UTCOffset);
 
             if (hasActiveBookings)
                 throw new BadRequestException("Cannot update interval with active or future bookings.");
+
 
             if (await IsOverlappingIntervalAsync(interval.StartTimeLOC, interval.FinishTimeLOC, interval.WeekDay, interval.WorkerId))
             {
@@ -74,8 +79,9 @@ namespace CompanyService.Services
                 throw new BadRequestException("Interval is out of the company working hours bounds ");
             }
 
-            interval.StartTimeLOC = StartTimeLOC;
-            interval.FinishTimeLOC = FinishTimeLOC;
+            interval.StartTimeLOC = updateInterval.StartTimeLOC;
+            interval.FinishTimeLOC = updateInterval.FinishTimeLOC;
+
 
             dbcontext.ScheduleIntervals.Update(interval);
             await dbcontext.SaveChangesAsync();
@@ -108,8 +114,13 @@ namespace CompanyService.Services
             {
                 IntervalId = intervalId,
             });
+
             return true;
         }
+
+
+
+
 
         public async Task<List<ScheduleInterval>> GetWeeklyScheduleWithBookingsAsync(string employeeId, DateTime currentDateLOC)
         {
@@ -131,6 +142,10 @@ namespace CompanyService.Services
 
             return scheduleIntervals;
         }
+
+
+
+
 
         public async Task<List<ScheduleEmptyWindow>> GetEmptyScheduleTimeByDate(string employeeId, DateTime date)
         {

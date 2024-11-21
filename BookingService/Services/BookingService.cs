@@ -1,10 +1,10 @@
 ﻿using BookingService.DB;
+using BookingService.DTO;
 using BookingService.Entities;
 using BookingService.Interfaces;
 using MassTransit;
 using Shared.Data;
 using Shared.Events.Booking;
-using Shared.Events.User;
 using Shared.Exceptions.custom_exceptions;
 
 namespace BookingService.Services
@@ -27,45 +27,32 @@ namespace BookingService.Services
 
 
 
-        public async Task AddBookingAsync(DateTime BookingTimeLOC, string WorkerId, string ClientEmail, int ProductId, TimeSpan? Duration = null)
+        public async Task AddBookingAsync(AddBookingDTO addBooking)
         {
-            var response = await _client.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = ClientEmail });
-            string clientId;
-            switch (response)
-            {
-                case var r when r.Message is UserEmailRequestResult result:
-                    clientId = result.Id;
-                    break;
-                case var r when r.Message is UserEmailRequestedNotFoundResult notFoundResult:
-                    throw new BadRequestException("User with email " + ClientEmail + " not found");
-
-                default:
-                    throw new InvalidOperationException("Unknown response type received.");
-            }
             var booking = new Booking
             {
-                ClientId = clientId,
-                WorkerId = WorkerId,
-                ProductId = ProductId,
+                ClientId = addBooking.ClientId,
+                WorkerId = addBooking.WorkerId,
+                ProductId = addBooking.ProductId,
                 Status = BookingStatus.Created,
 
-                StartDateLOC = BookingTimeLOC,
+                StartDateLOC = addBooking.BookingTimeLOC,
 
             };
-            if (Duration != null)
+            if (addBooking.Duration != null)
             {
-                var responseIs = await _client.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
+                var response = await _client.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
                 {
-                    StartDateLOC = BookingTimeLOC,
-                    EndDateLOC = BookingTimeLOC.Add(Duration.Value),
-                    ProductId = ProductId,
-                    WorkerId = WorkerId
+                    StartDateLOC = addBooking.BookingTimeLOC,
+                    EndDateLOC = addBooking.BookingTimeLOC.Add(addBooking.Duration.Value),
+                    ProductId = addBooking.ProductId,
+                    WorkerId = addBooking.WorkerId
                 });
-                if (responseIs.Message.IsValid == false)
+                if (response.Message.IsValid == false)
                 {
                     throw new BadRequestException("The booking overlaps with an existing booking.");
                 }
-                booking.EndDateLOC = BookingTimeLOC.Add(Duration.Value);
+                booking.EndDateLOC = addBooking.BookingTimeLOC.Add(addBooking.Duration.Value);
             }
 
             dbcontext.Bookings.Add(booking);
@@ -73,18 +60,18 @@ namespace BookingService.Services
 
             await publishEndpoint.Publish(new BookingCreated
             {
-                WorkerId = WorkerId,
+                WorkerId = addBooking.WorkerId,
                 BookingId = booking.Id,
-                ClientId = clientId,
+                ClientId = addBooking.ClientId,
                 EndDateLOC = booking.EndDateLOC,
                 StartDateLOC = booking.StartDateLOC,
-                ProductId = ProductId,
+                ProductId = addBooking.ProductId,
             });
         }
 
-        public async Task EditBookingAsync(int Id, DateTime BookingTimeLOC, string WorkerId)
+        public async Task EditBookingAsync(EditBookingDTO editBookingDTO)
         {
-            var booking = await dbcontext.Bookings.FindAsync(Id) ?? throw new BadRequestException("Invalid booking ID " + Id);
+            var booking = await dbcontext.Bookings.FindAsync(editBookingDTO.Id) ?? throw new BadRequestException("Invalid booking ID " + editBookingDTO.Id);
 
             if (booking.Status != BookingStatus.Created)
             {
@@ -96,21 +83,21 @@ namespace BookingService.Services
                 var duration = booking.EndDateLOC - booking.StartDateLOC;//calculate duration based on start-end diff
                 var response = await _client.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
                 {
-                    StartDateLOC = BookingTimeLOC,
-                    EndDateLOC = BookingTimeLOC.Add(duration.Value),
-                    WorkerId = WorkerId,
+                    StartDateLOC = editBookingDTO.BookingTimeLOC,
+                    EndDateLOC = editBookingDTO.BookingTimeLOC.Add(duration.Value),
+                    WorkerId = editBookingDTO.WorkerId,
                     ProductId = booking.ProductId
                 });
                 if (response.Message.IsValid == false)
                 {
                     throw new BadRequestException("The booking overlaps with an existing booking.");
                 }
-                booking.EndDateLOC = BookingTimeLOC.Add(duration.Value);
+                booking.EndDateLOC = editBookingDTO.BookingTimeLOC.Add(duration.Value);
 
             }
 
-            booking.WorkerId = WorkerId;
-            booking.StartDateLOC = BookingTimeLOC;
+            booking.WorkerId = editBookingDTO.WorkerId;
+            booking.StartDateLOC = editBookingDTO.BookingTimeLOC;
 
             await dbcontext.SaveChangesAsync();
             await publishEndpoint.Publish(new BookingEdited

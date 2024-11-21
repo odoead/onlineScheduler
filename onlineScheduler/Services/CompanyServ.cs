@@ -27,41 +27,40 @@ namespace CompanyService.Services
         }
 
 
-        public async Task<int> AddCompanyAsync(string Name, string Description, TimeSpan OpeningTimeLOC, TimeSpan ClosingTimeLOC, int _CompanyType,
-            List<int> WorkingDays, double Latitude, double Longitude, string ownerEmail)
+        public async Task<int> AddCompanyAsync(CreateCompanyDTO companyDTO, string ownerEmail)
         {
 
             var location = new Location
             {
-                Coordinates = new NpgsqlTypes.NpgsqlPoint { X = Longitude, Y = Latitude }
+                Coordinates = new NpgsqlTypes.NpgsqlPoint { X = companyDTO.Longitude, Y = companyDTO.Latitude }
             };
-            var timeZoneOffset = TimezoneConverter.GetTimezoneFromLocation(Longitude, Latitude).BaseUtcOffset;
+            var timeZoneOffset = TimezoneConverter.GetTimezoneFromLocation(companyDTO.Longitude, companyDTO.Latitude).BaseUtcOffset;
 
             var ownerData = await GetUserData(ownerEmail);
             await CheckAndAddWorkers(new List<UserEmailRequestResult> { ownerData });
 
 
-            Company company = _CompanyType switch
+            Company company = companyDTO.CompanyType switch
             {
                 (int)CompanyType.Personal => new PersonalCompany
                 {
-                    Name = Name,
-                    Description = Description,
-                    OpeningTimeLOC = OpeningTimeLOC,
-                    ClosingTimeLOC = ClosingTimeLOC,
+                    Name = companyDTO.Name,
+                    Description = companyDTO.Description,
+                    OpeningTimeLOC = companyDTO.OpeningTimeLOC,
+                    ClosingTimeLOC = companyDTO.ClosingTimeLOC,
                     OwnerId = ownerData.Id,
                     WorkerId = ownerData.Id,
                     Location = location,
                     TimeZoneFromUTCOffset = timeZoneOffset,
                     Products = new List<Product>(),
-                    WorkingDays = WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
+                    WorkingDays = companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
                 },
                 (int)CompanyType.Shared => new SharedCompany
                 {
-                    Name = Name,
-                    Description = Description,
-                    OpeningTimeLOC = OpeningTimeLOC,
-                    ClosingTimeLOC = ClosingTimeLOC,
+                    Name = companyDTO.Name,
+                    Description = companyDTO.Description,
+                    OpeningTimeLOC = companyDTO.OpeningTimeLOC,
+                    ClosingTimeLOC = companyDTO.ClosingTimeLOC,
                     OwnerId = ownerData.Id,
                     Location = location,
                     TimeZoneFromUTCOffset = timeZoneOffset,
@@ -70,15 +69,15 @@ namespace CompanyService.Services
                     new CompanyWorker { WorkerId = ownerData.Id }
                 },
                     Products = new List<Product>(),
-                    WorkingDays = WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
+                    WorkingDays = companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
                 },
                 _ => throw new BadRequestException("Invalid company type.")
             };
             await dbcontext.Companies.AddAsync(company);
             await dbcontext.SaveChangesAsync();
 
-            var newSchedules = CreateScheduleForWorkers(new List<string> { ownerData.Id }, company.Id, OpeningTimeLOC, ClosingTimeLOC,
-                 WorkingDays.Select(d => (DayOfTheWeek)d).ToList());
+            var newSchedules = CreateScheduleForWorkers(new List<string> { ownerData.Id }, company.Id, companyDTO.OpeningTimeLOC, companyDTO.ClosingTimeLOC,
+                companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList());
 
             await dbcontext.ScheduleIntervals.AddRangeAsync(newSchedules);
             await dbcontext.SaveChangesAsync();
@@ -88,14 +87,17 @@ namespace CompanyService.Services
                 CompanyName = company.Name,
                 OwnerId = company.OwnerId,
                 ClosingTimeLOC = company.ClosingTimeLOC,
-                CompanyType =  CompanyType,
-                EmployeeIds =  EmployeeIds,
+                CompanyType = companyDTO.CompanyType,
+                EmployeeIds = companyDTO.EmployeeIds,
                 OpeningTimeLOC = company.OpeningTimeLOC,
-                WorkingDays =  WorkingDays.Select(d => (DayOfTheWeek)d).ToList()
+                WorkingDays = companyDTO.WorkingDays.Select(d => (DayOfTheWeek)d).ToList()
             });*/
 
             return company.Id;
         }
+
+
+
 
         public async Task<bool> DeleteCompanyAsync(int companyId)
         {
@@ -192,7 +194,7 @@ namespace CompanyService.Services
 
         public async Task<GetCompanyDTO> GetCompany(int companyId)
         {
-            var company = await dbcontext.Companies.Include(q => q.Owner).Include(q => q.Location).Include(q=>q.Products)
+            var company = await dbcontext.Companies.Include(q => q.Owner).Include(q => q.Location)
                 .Include(q => ((SharedCompany)q).Workers).ThenInclude(q => q.Worker)
                 .Include(q => ((PersonalCompany)q).Worker)
                 .Where(q => q.Id == companyId).FirstOrDefaultAsync();
@@ -208,15 +210,13 @@ namespace CompanyService.Services
                 Longitude = company.Location.Coordinates.X,
                 Latitude = company.Location.Coordinates.Y,
             };
-            dto.Products = company.Products.Select(p => new ProductDTO { DurationTime = p.Duration, Id = p.Id, Title = p.Name,  }).ToList();
+            dto.Products = company.Products.Select(p => new ProductDTO { DurationTime = p.Duration, Id = p.Id, Title = p.Name, }).ToList();
             if (company is SharedCompany sharedCompany)
             {
-                dto.CompanyType= CompanyType.Shared;
                 dto.Workers = sharedCompany.Workers.Select(w => new WorkerMinDTO { FullName = w.Worker.FullName, Id = w.WorkerId, }).ToList();
             }
             else if (company is PersonalCompany personalCompany)
             {
-                dto.CompanyType = CompanyType.Personal;
                 dto.Workers = new List<WorkerMinDTO> { new WorkerMinDTO { FullName = personalCompany.Worker.FullName, Id = personalCompany.WorkerId } };
             }
 
