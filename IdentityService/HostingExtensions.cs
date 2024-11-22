@@ -1,6 +1,8 @@
 using Duende.IdentityServer.Services;
+using IdentityService.Consumers;
 using IdentityService.Data;
 using IdentityService.Models;
+using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -16,6 +18,23 @@ internal static class HostingExtensions
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+        builder.Services.AddMassTransit(x =>
+        {
+            x.AddConsumersFromNamespaceContaining<UserEmailRequestedConsumer>();
+            x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("user", false));
+            
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(builder.Configuration["RabbitMq:Host"], "/", host =>
+                {
+                    host.Username(builder.Configuration.GetValue("RabbitMq:Username", "guest"));
+                    host.Password(builder.Configuration.GetValue("RabbitMq:Password", "guest"));
+                });
+                cfg.ConfigureEndpoints(context);
+            });
+
+        });
+        
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();

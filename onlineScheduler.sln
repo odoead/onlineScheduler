@@ -3,22 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompanyService", "onlineScheduler\CompanyService.csproj", "{907A6CC5-1DC6-4768-93E6-995A4B7624D5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{C566B05F-8309-48C3-A54B-0FEE16E4A10D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityService", "IdentityService\IdentityService.csproj", "{0A3372F8-3E0D-4A0B-9DA4-67CC8C1E5282}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GatewayService", "GategayService\GatewayService.csproj", "{75838D97-6E53-4F41-BE42-C4FBD6767B13}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookingService", "BookingService\BookingService.csproj", "{1228756F-196E-4FDE-B312-BFBAD89E666A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{49EFDBA6-DCC9-48DF-998B-9DBACBCF9B83}"
 	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
 		TextFile1.txt = TextFile1.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "NotificationService\NotificationService.csproj", "{8ED6C287-777B-40C7-89C0-C70AA45BE179}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "NotificationService\NotificationService.csproj", "{8ED6C287-777B-40C7-89C0-C70AA45BE179}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GatewayService", "GatewayService\GatewayService.csproj", "{C42114D1-ABE7-4403-9903-80BEF680D601}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompanyService", "CompanyService\CompanyService.csproj", "{380AE789-76BF-4C20-89A6-75FCBFA58F9A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,10 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{907A6CC5-1DC6-4768-93E6-995A4B7624D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{907A6CC5-1DC6-4768-93E6-995A4B7624D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{907A6CC5-1DC6-4768-93E6-995A4B7624D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{907A6CC5-1DC6-4768-93E6-995A4B7624D5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C566B05F-8309-48C3-A54B-0FEE16E4A10D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C566B05F-8309-48C3-A54B-0FEE16E4A10D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C566B05F-8309-48C3-A54B-0FEE16E4A10D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -38,10 +35,6 @@ Global
 		{0A3372F8-3E0D-4A0B-9DA4-67CC8C1E5282}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A3372F8-3E0D-4A0B-9DA4-67CC8C1E5282}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A3372F8-3E0D-4A0B-9DA4-67CC8C1E5282}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75838D97-6E53-4F41-BE42-C4FBD6767B13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75838D97-6E53-4F41-BE42-C4FBD6767B13}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75838D97-6E53-4F41-BE42-C4FBD6767B13}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75838D97-6E53-4F41-BE42-C4FBD6767B13}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1228756F-196E-4FDE-B312-BFBAD89E666A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1228756F-196E-4FDE-B312-BFBAD89E666A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1228756F-196E-4FDE-B312-BFBAD89E666A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -50,6 +43,14 @@ Global
 		{8ED6C287-777B-40C7-89C0-C70AA45BE179}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8ED6C287-777B-40C7-89C0-C70AA45BE179}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8ED6C287-777B-40C7-89C0-C70AA45BE179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C42114D1-ABE7-4403-9903-80BEF680D601}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C42114D1-ABE7-4403-9903-80BEF680D601}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C42114D1-ABE7-4403-9903-80BEF680D601}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C42114D1-ABE7-4403-9903-80BEF680D601}.Release|Any CPU.Build.0 = Release|Any CPU
+		{380AE789-76BF-4C20-89A6-75FCBFA58F9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{380AE789-76BF-4C20-89A6-75FCBFA58F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{380AE789-76BF-4C20-89A6-75FCBFA58F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{380AE789-76BF-4C20-89A6-75FCBFA58F9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

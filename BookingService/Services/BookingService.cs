@@ -13,15 +13,16 @@ namespace BookingService.Services
     {
         private readonly Context dbcontext;
         private readonly IPublishEndpoint publishEndpoint;
-        IRequestClient<IsValidBookingTimeRequested> _client;// check if booking can be created
-        IRequestClient<BookingConfirmationRequested> _client2;// create booking and produce success-fail
-
-        public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client, IRequestClient<BookingConfirmationRequested> client2)
+        IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// check if booking can be created
+        IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
+        IRequestClient<UserEmailRequested> UserEmailclient;
+        public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client, IRequestClient<BookingConfirmationRequested> client2, IRequestClient<UserEmailRequested> userEmailclient)
         {
             dbcontext = context;
             publishEndpoint = endpoint;
-            _client = client;
-            _client2 = client2;
+            IsValidBookingTimeClient = client;
+            BookingConfirmationclient = client2;
+            UserEmailclient = userEmailclient;
         }
 
 
@@ -29,7 +30,7 @@ namespace BookingService.Services
 
         public async Task AddBookingAsync(DateTime BookingTimeLOC, string WorkerId, string ClientEmail, int ProductId, TimeSpan? Duration = null)
         {
-            var response = await _client.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = ClientEmail });
+            var response = await UserEmailclient.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = ClientEmail });
             string clientId;
             switch (response)
             {
@@ -54,7 +55,7 @@ namespace BookingService.Services
             };
             if (Duration != null)
             {
-                var responseIs = await _client.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
+                var responseIs = await IsValidBookingTimeClient.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
                 {
                     StartDateLOC = BookingTimeLOC,
                     EndDateLOC = BookingTimeLOC.Add(Duration.Value),
@@ -94,7 +95,7 @@ namespace BookingService.Services
             if (booking.EndDateLOC != null)
             {
                 var duration = booking.EndDateLOC - booking.StartDateLOC;//calculate duration based on start-end diff
-                var response = await _client.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
+                var response = await IsValidBookingTimeClient.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
                 {
                     StartDateLOC = BookingTimeLOC,
                     EndDateLOC = BookingTimeLOC.Add(duration.Value),
@@ -151,7 +152,7 @@ namespace BookingService.Services
 
                     case BookingStatus.Confirmed:
                         booking.Status = BookingStatus.Confirmed;
-                        var confirmationResponse = await _client2.GetResponse<BookingConfirmationRequestResult>(new BookingConfirmationRequested
+                        var confirmationResponse = await BookingConfirmationclient.GetResponse<BookingConfirmationRequestResult>(new BookingConfirmationRequested
                         {
                             BookingId = booking.Id,
                             WorkerId = booking.WorkerId,

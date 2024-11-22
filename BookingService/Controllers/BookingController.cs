@@ -51,6 +51,13 @@ namespace BookingService.Controllers
             await _bookingService.ChangeBookingStatusASync(id, newStatus);
             return Ok();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> test()
+        {
+           
+            return Ok("99999999999999");
+        }
     }
 }
 

@@ -1,29 +1,24 @@
-using BookingService.DB;
-using BookingService.Interfaces;
+using CompanyService.Consumers;
+using CompanyService.DB;
+using CompanyService.Interfaces;
+using CompanyService.Services;
 using IdentityModel;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Shared.Events.Booking;
 using Shared.Events.User;
-using E = BookingService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-#region db config
 builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-#endregion
-
-builder.Services.AddScoped<IBookingService, E.BookingService>();
+builder.Services.AddScoped<ICompanyService, CompanyServ>();
 builder.Services.AddMassTransit(x =>
 {
-    // x.AddConsumersFromNamespaceContaining<>();
-    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("booking", false));
-    x.AddRequestClient<IsValidBookingTimeRequested>();
-    x.AddRequestClient<BookingConfirmationRequested>();
+    x.AddConsumersFromNamespaceContaining<BookingConfirmationRequestedConsumer>();
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("company", false));
     x.AddRequestClient<UserEmailRequested>();
 
     x.UsingRabbitMq((context, cfg) =>
@@ -36,6 +31,7 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
 });
+
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
@@ -55,7 +51,14 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 
+builder.Services.AddScoped<IBookingValidationService, BookingValidationService>();
+builder.Services.AddScoped<ICompanyService, CompanyServ>();
+builder.Services.AddScoped<IProductService, ProductServ>();
+builder.Services.AddScoped<IScheduleService, ScheduleServ>();
+
 var app = builder.Build();
+
+// Configure the HTTP request pipeline.
 
 app.UseAuthentication();
 app.UseAuthorization();

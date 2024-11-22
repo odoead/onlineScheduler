@@ -4,8 +4,8 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 80
+
 
 
 # This stage is used to build the service project
@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["NotificationService/NotificationService.csproj", "NotificationService/"]
+COPY ["Shared/Shared.csproj", "Shared/"]
 RUN dotnet restore "./NotificationService/NotificationService.csproj"
 COPY . .
 WORKDIR "/src/NotificationService"
