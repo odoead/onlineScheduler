@@ -16,8 +16,6 @@ namespace BookingService.Entities
         public ServiceType Service { get; set; }
 
 
-
-
     }
     public enum ServiceType
     {

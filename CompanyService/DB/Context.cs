@@ -29,9 +29,6 @@ namespace CompanyService.DB
                 .HasValue<PersonalCompany>((int)CompanyType.Personal)
                 .HasValue<SharedCompany>((int)CompanyType.Shared);
 
-
-            base.OnModelCreating(builder);
-
             // Define composite key for CompanyWorkers
             builder.Entity<CompanyWorker>()
                 .HasKey(cw => new { cw.CompanyID, cw.WorkerId });

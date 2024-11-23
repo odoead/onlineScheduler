@@ -18,6 +18,7 @@ namespace BookingService.DB
             base.OnModelCreating(builder);
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
+            #region booking
             builder.Entity<Booking>()
             .Property(e => e.Status)
             .HasConversion<int>();
@@ -25,7 +26,7 @@ namespace BookingService.DB
             builder.Entity<Booking>()
             .Property(e => e.Service)
             .HasConversion<int>();
-
+            #endregion
         }
 
     }

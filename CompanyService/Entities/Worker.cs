@@ -19,7 +19,6 @@ namespace CompanyService.Entities
     }
 
 
-    [Keyless]
     public class CompanyWorker
     {
         [ForeignKey("CompanyID")]
@@ -31,7 +30,6 @@ namespace CompanyService.Entities
         public string WorkerId { get; set; }
     }
 
-    [Keyless]
     public class ProductWorker
     {
         [ForeignKey("WorkerId")]
