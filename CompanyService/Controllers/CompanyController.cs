@@ -1,4 +1,4 @@
-using CompanyService.DTO;
+using CompanyService.DTO.Company;
 using CompanyService.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +22,10 @@ namespace CompanyService.Controllers
         public async Task<IActionResult> AddCompany([FromBody] CreateCompanyDTO createCompanyDTO)
         {
             var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
 
             var companyId = await companyService.AddCompanyAsync(
                     createCompanyDTO.Name,
@@ -41,7 +45,7 @@ namespace CompanyService.Controllers
         public async Task<IActionResult> DeleteCompany(int companyId)
         {
             var result = await companyService.DeleteCompanyAsync(companyId);
-            return NoContent();
+            return Ok(result);
         }
 
         [HttpPost("{companyId}/employees")]
@@ -71,7 +75,7 @@ namespace CompanyService.Controllers
         [HttpGet()]
         public async Task<IActionResult> GetCompanya()
         {
-            
+
             return Ok(888888);
         }
     }

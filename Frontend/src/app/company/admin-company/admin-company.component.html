@@ -1,0 +1,66 @@
+<mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ company.Name }}</mat-card-title>
+      <mat-card-subtitle>{{ company.CompanyType }} Company</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="company-info">
+        <p><strong>Description:</strong> {{ company.Description }}</p>
+        <p><strong>Opening Time:</strong> {{ company.OpeningTimeLOC }}</p>
+        <p><strong>Closing Time:</strong> {{ company.ClosingTimeLOC }}</p>
+        <p><strong>Owner:</strong> {{ company.OwnerName }}</p>
+
+        <hr>
+        
+        <h3>Employees</h3>
+
+        <mat-list>
+          <mat-list-item *ngFor="let worker of company.Workers">
+            <span matListItemTitle>{{ worker.Name }}</span>
+            <span matListItemMeta>
+              <button mat-icon-button color="warn" (click)="removeEmployee(worker.Id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
+          </mat-list-item>
+        </mat-list>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="addEmployee()">
+        <mat-icon>add</mat-icon> Add Employee
+      </button>
+      <button mat-raised-button color="warn" (click)="deleteCompany()">
+        <mat-icon>delete</mat-icon> Delete Company
+      </button>
+    </mat-card-actions>
+
+
+    <mat-card-content>
+      
+        <h3>Products</h3>
+
+        <mat-list>
+          <mat-list-item *ngFor="let product of company.Products">
+            <span matListItemTitle>{{ product.Name }}</span>
+            <span matListItemMeta>
+              <button mat-icon-button color="warn" (click)="removeProduct(product.Id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="updateProduct(product.Id)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </span>
+          </mat-list-item>
+        </mat-list>
+    </mat-card-content>
+    
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="addProduct()">
+        <mat-icon>add</mat-icon> Add Product
+      </button>
+     
+    </mat-card-actions>
+</mat-card>

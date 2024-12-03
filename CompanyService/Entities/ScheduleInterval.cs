@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Shared.Data;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyService.Entities
@@ -7,10 +8,10 @@ namespace CompanyService.Entities
     {
         [Key]
         public int Id { get; set; }
-        public int WeekDay { get; set; }
+        public DayOfTheWeek WeekDay { get; set; }
         public TimeSpan StartTimeLOC { get; set; }
         public TimeSpan FinishTimeLOC { get; set; }
-        public IntervalType IntervalType { get; set; } = IntervalType.Work;
+        public IntervalType IntervalType { get; set; } = IntervalType.WORK;
 
         [ForeignKey("WorkerId")]
         public Worker Worker { get; set; }
@@ -24,7 +25,7 @@ namespace CompanyService.Entities
 
     public enum IntervalType
     {
-        Work,
-        Break
+        WORK,
+        BREAK
     }
 }

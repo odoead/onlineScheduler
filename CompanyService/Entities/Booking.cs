@@ -22,5 +22,4 @@ namespace CompanyService.Entities
         public int ScheduleIntervalId { get; set; }
     }
 
-
 }

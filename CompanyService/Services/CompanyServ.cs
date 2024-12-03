@@ -1,5 +1,6 @@
 ﻿using CompanyService.DB;
-using CompanyService.DTO;
+using CompanyService.DTO.Company;
+using CompanyService.DTO.Product;
 using CompanyService.DTO.Worker;
 using CompanyService.Entities;
 using CompanyService.Helpers;
@@ -16,7 +17,7 @@ namespace CompanyService.Services
     {
         private readonly Context dbcontext;
         private readonly IPublishEndpoint _publishEndpoint;
-        IRequestClient<UserEmailRequested> _client;
+        private readonly IRequestClient<UserEmailRequested> _client;
         private readonly IBookingValidationService bookingValidator;
 
         public CompanyServ(Context context, IPublishEndpoint publishEndpoint, IRequestClient<UserEmailRequested> client, IBookingValidationService bookingValidator)
@@ -26,7 +27,6 @@ namespace CompanyService.Services
             _client = client;
             this.bookingValidator = bookingValidator;
         }
-
 
         public async Task<int> AddCompanyAsync(string Name, string Description, TimeSpan OpeningTimeLOC, TimeSpan ClosingTimeLOC, int _CompanyType,
             List<int> WorkingDays, double Latitude, double Longitude, string ownerEmail)
@@ -41,10 +41,9 @@ namespace CompanyService.Services
             var ownerData = await GetUserData(ownerEmail);
             await CheckAndAddWorkers(new List<UserEmailRequestResult> { ownerData });
 
-
             Company company = _CompanyType switch
             {
-                (int)CompanyType.Personal => new PersonalCompany
+                (int)CompanyType.PERSONAL => new PersonalCompany
                 {
                     Name = Name,
                     Description = Description,
@@ -57,7 +56,7 @@ namespace CompanyService.Services
                     Products = new List<Product>(),
                     WorkingDays = WorkingDays.Select(d => (DayOfTheWeek)d).ToList(),
                 },
-                (int)CompanyType.Shared => new SharedCompany
+                (int)CompanyType.SHARED => new SharedCompany
                 {
                     Name = Name,
                     Description = Description,
@@ -144,7 +143,6 @@ namespace CompanyService.Services
 
             var schedules = CreateScheduleForWorkers(newWorkerIds, companyId, company.OpeningTimeLOC, company.OpeningTimeLOC, company.WorkingDays);
 
-
             await dbcontext.ScheduleIntervals.AddRangeAsync(schedules);
             await dbcontext.SaveChangesAsync();
             /*await _publishEndpoint.Publish(new UpdatedCompanyEmployees
@@ -200,6 +198,7 @@ namespace CompanyService.Services
 
             var dto = new GetCompanyDTO
             {
+                Id = company.Id,
                 Name = company.Name,
                 Description = company.Description,
                 OpeningTimeLOC = company.OpeningTimeLOC,
@@ -209,15 +208,15 @@ namespace CompanyService.Services
                 Longitude = company.Location.Coordinates.X,
                 Latitude = company.Location.Coordinates.Y,
             };
-            dto.Products = company.Products.Select(p => new ProductDTO { DurationTime = p.Duration, Id = p.Id, Title = p.Name, }).ToList();
+            dto.Products = company.Products.Select(p => new ProductMinDTO { DurationTime = p.Duration, Id = p.Id, Title = p.Name, }).ToList();
             if (company is SharedCompany sharedCompany)
             {
-                dto.CompanyType = CompanyType.Shared;
+                dto.CompanyType = CompanyType.SHARED;
                 dto.Workers = sharedCompany.Workers.Select(w => new WorkerMinDTO { Name = w.Worker.FullName, Id = w.WorkerId, }).ToList();
             }
             else if (company is PersonalCompany personalCompany)
             {
-                dto.CompanyType = CompanyType.Personal;
+                dto.CompanyType = CompanyType.PERSONAL;
                 dto.Workers = new List<WorkerMinDTO> { new WorkerMinDTO { Name = personalCompany.Worker.FullName, Id = personalCompany.WorkerId } };
             }
 
@@ -253,7 +252,7 @@ namespace CompanyService.Services
                 foreach (var day in weekday)
                 {
                     scheduleIntervals.Add(new ScheduleInterval
-                    { WorkerId = id, CompanyId = companyId, StartTimeLOC = startTime, WeekDay = (int)day, IntervalType = IntervalType.Work, FinishTimeLOC = finishTime, });
+                    { WorkerId = id, CompanyId = companyId, StartTimeLOC = startTime, WeekDay = day, IntervalType = IntervalType.WORK, FinishTimeLOC = finishTime, });
 
                 }
             }

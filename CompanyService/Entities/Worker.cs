@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyService.Entities
@@ -17,7 +16,6 @@ namespace CompanyService.Entities
         public List<ProductWorker> AssignedProducts { get; set; }
         public List<Booking> Bookings { get; set; }
     }
-
 
     public class CompanyWorker
     {

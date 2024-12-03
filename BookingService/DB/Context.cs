@@ -12,7 +12,6 @@ namespace BookingService.DB
 
         public DbSet<Booking> Bookings { get; set; }
 
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -30,6 +29,5 @@ namespace BookingService.DB
         }
 
     }
-
 
 }

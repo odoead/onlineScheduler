@@ -16,7 +16,6 @@ namespace CompanyService.Services
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly IBookingValidationService bookingValidator;
 
-
         public ProductServ(Context context, IPublishEndpoint publishEndpoint, IBookingValidationService bookingValidator)
         {
             dbcontext = context;
@@ -93,7 +92,7 @@ namespace CompanyService.Services
             });*/
         }
 
-        public async Task DeleteProductAsync(int id)
+        public async Task<bool> DeleteProductAsync(int id)
         {
             var product = await dbcontext.Products.FindAsync(id) ?? throw new NotFoundException("Product not found " + id);
 
@@ -104,7 +103,7 @@ namespace CompanyService.Services
 
             dbcontext.Products.Remove(product);
             await dbcontext.SaveChangesAsync();
-
+            return true;
 
             /* await _publishEndpoint.Publish(new ProductForCompanyDeleted
              {

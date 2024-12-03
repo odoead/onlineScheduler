@@ -1,16 +1,15 @@
 ﻿using MassTransit;
 using NotificationService.DB;
 using NotificationService.Entities;
+using Shared.Data;
 using Shared.Events.Booking;
 using Shared.Events.Company;
-using Shared.Events.User;
 
 namespace NotificationService.Consumers
 {
     public class BookingCanceledConsumer : IConsumer<BookingCanceled>
     {
         private readonly Context dbcontext;
-        IRequestClient<UserIdRequested> userClient;
         IRequestClient<NotificationAdditionalDataRequested> client;
 
         public BookingCanceledConsumer(Context context)
@@ -29,8 +28,9 @@ namespace NotificationService.Consumers
             }
             keyValues.Add("bookingid", mess.BookingId.ToString());
             keyValues.Add("productid", mess.ProductId.ToString());
+            keyValues.Add("status", BookingStatus.CANCELED.ToString());
 
-            var data = await client.GetResponse<NotificationAdditionalDataResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
+            var data = await client.GetResponse<NotificationAdditionalDataRequestResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
             foreach (var keyval in data.Message.Data)
             {
                 keyValues.Add(keyval.Key, keyval.Value);
@@ -40,7 +40,7 @@ namespace NotificationService.Consumers
             {
                 RecieverId = mess.WorkerId,
                 Description = "booking canceled",
-                Service = ServiceType.Schedule,
+                Service = ServiceType.SCHEDULE,
                 Title = "Booking canceled",
                 NotificationKeyValues = keyValues.Select(kv => new Data { Key = kv.Key, Value = kv.Value, }).ToList(),
             };

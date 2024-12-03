@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using NotificationService.DB;
 using NotificationService.Entities;
+using Shared.Data;
 using Shared.Events.Booking;
 using Shared.Events.Company;
 using Shared.Events.User;
@@ -30,7 +31,7 @@ namespace NotificationService.Consumers
             keyValues.Add("bookingid", mess.BookingId.ToString());
             keyValues.Add("productid", mess.ProductId.ToString());
 
-            var data = await client.GetResponse<NotificationAdditionalDataResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
+            var data = await client.GetResponse<NotificationAdditionalDataRequestResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
             foreach (var keyval in data.Message.Data)
             {
                 keyValues.Add(keyval.Key, keyval.Value);
@@ -38,12 +39,13 @@ namespace NotificationService.Consumers
             var clientData = await userClient.GetResponse<UserIdRequestResult>(new UserIdRequested { Id = mess.ClientId });
             keyValues.Add("clientemail", clientData.Message.Email);
             keyValues.Add("clientname", clientData.Message.Email);
+            keyValues.Add("status", BookingStatus.CREATED.ToString());
 
             var notification = new Notification
             {
                 RecieverId = mess.WorkerId,
                 Description = "booking request created successfuly",
-                Service = ServiceType.Schedule,
+                Service = ServiceType.SCHEDULE,
                 Title = "Booking request",
                 NotificationKeyValues = keyValues.Select(kv => new Data { Key = kv.Key, Value = kv.Value, }).ToList(),
             };

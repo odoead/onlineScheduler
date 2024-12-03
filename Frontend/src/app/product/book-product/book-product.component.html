@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>Booking</h2>
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Select Date</mat-label>
+    <input
+      matInput
+      [matDatepicker]="picker"
+      [(ngModel)]="selectedDate"
+      (dateChange)="onDateChange()"
+    />
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <div *ngIf="availableSlots.length > 0">
+    <p>Available Time Slots:</p>
+    <mat-radio-group [(ngModel)]="selectedSlot">
+      <mat-radio-button
+        *ngFor="let slot of availableSlots"
+        [value]="slot">
+        {{ slot.BeginTime.hr }}:{{ slot.BeginTime.min }} - {{ slot.EndTime.hr }}:{{ slot.EndTime.min }}
+      </mat-radio-button>
+    </mat-radio-group>
+  </div>
+
+  <div *ngIf="availableSlots.length === 0 && selectedDate">
+    <p>No available slots for the selected date.</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="!form.valid || !selectedSlot">
+    Book
+  </button>
+</mat-dialog-actions>

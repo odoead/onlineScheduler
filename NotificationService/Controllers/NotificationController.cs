@@ -15,12 +15,15 @@ namespace NotificationService.Controllers
             this.notificationService = notificationService;
         }
 
-
         [HttpGet]
         [Route("GetNotifications")]
         public async Task<IActionResult> GetNotifications([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
 
             var notifications = await notificationService.GetNotifications(emailClaim, pageNumber, pageSize);
             return Ok(notifications);

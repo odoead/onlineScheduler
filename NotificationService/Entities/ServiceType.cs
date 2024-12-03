@@ -2,7 +2,7 @@
 {
     public enum ServiceType
     {
-        Schedule = 1,
+        SCHEDULE = 1,
         ///...
     }
 }

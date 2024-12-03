@@ -21,6 +21,10 @@ namespace BookingService.Controllers
         public async Task<IActionResult> AddBooking([FromBody] AddBookingDTO addBookingDTO)
         {
             var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
 
             await _bookingService.AddBookingAsync(
                 addBookingDTO.BookingTimeLOC,
@@ -48,14 +52,14 @@ namespace BookingService.Controllers
         [HttpPatch("status/{id}")]
         public async Task<IActionResult> ChangeBookingStatus(int id, [FromBody] int newStatus)
         {
-            await _bookingService.ChangeBookingStatusASync(id, newStatus);
+            await _bookingService.ChangeBookingStatusAsync(id, newStatus);
             return Ok();
         }
 
         [HttpGet]
         public async Task<IActionResult> test()
         {
-           
+
             return Ok("99999999999999");
         }
     }

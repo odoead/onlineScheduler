@@ -51,5 +51,4 @@ namespace CompanyService.Entities
         public string WorkerId { get; set; }
     }
 
-
 }

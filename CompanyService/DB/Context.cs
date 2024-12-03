@@ -26,8 +26,8 @@ namespace CompanyService.DB
             base.OnModelCreating(builder);
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             builder.Entity<Company>().HasDiscriminator<int>("CompanyType")
-                .HasValue<PersonalCompany>((int)CompanyType.Personal)
-                .HasValue<SharedCompany>((int)CompanyType.Shared);
+                .HasValue<PersonalCompany>((int)CompanyType.PERSONAL)
+                .HasValue<SharedCompany>((int)CompanyType.SHARED);
 
             // Define composite key for CompanyWorkers
             builder.Entity<CompanyWorker>()
@@ -42,7 +42,6 @@ namespace CompanyService.DB
                 .WithMany(u => u.CompanyWorkAssignments)
                 .HasForeignKey(cw => cw.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
             builder.Entity<ProductWorker>()
                 .HasKey(cw => new { cw.ProductId, cw.WorkerId });
@@ -61,10 +60,9 @@ namespace CompanyService.DB
            .Property(e => e.IntervalType)
            .HasConversion<int>();
 
-
+            builder.Entity<ScheduleInterval>().Property(q => q.WeekDay).HasConversion<int>();
         }
 
     }
-
 
 }

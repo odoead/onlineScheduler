@@ -1,0 +1,37 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav mode="side" [opened]="isOpen">
+    <mat-toolbar>
+      <span>Notifications</span>
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="sidenav.toggle()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <div >
+      <mat-nav-list>
+        <h3>Notifications</h3>
+
+        <mat-list-item *ngFor="let notification of notifications">
+          <div mat-line>{{ notification.Title }}</div>
+          <div mat-line>{{ notification.Description }}</div>
+
+          <div *ngFor="let key of objectKeys(notification.notificationKeyValues)">
+            <div mat-line>
+              <strong>{{ key }}:</strong>
+              {{ notification.notificationKeyValues[key] }}
+            </div>
+          </div>
+        </mat-list-item>
+      </mat-nav-list>
+
+      <div class="show-more-button">
+        <button mat-button (click)="loadMore()">Show more</button>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <button mat-button (click)="sidenav.toggle()">Toggle History</button>
+  </mat-sidenav-content>
+</mat-sidenav-container>

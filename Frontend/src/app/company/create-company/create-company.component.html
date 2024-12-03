@@ -1,0 +1,123 @@
+<div class="add-company-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Add New Company</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <!-- Name Input -->
+        <mat-form-field appearance="outline">
+          <mat-label>Company Name</mat-label>
+          <input matInput formControlName="name" required appFormValidation [showAllErrors]="true"/>
+        </mat-form-field>
+
+        <!-- Description Input -->
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" appFormValidation [showAllErrors]="true"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Opening Time</mat-label>
+          <input
+            matInput
+            [ngxTimepicker]="openingTimePicker"
+            formControlName="openingTimeLOC"
+            [format]="24"
+            placeholder="Select opening time"
+            readonly appFormValidation [showAllErrors]="true"
+          />
+          <ngx-material-timepicker #openingTimePicker>
+          </ngx-material-timepicker>
+        </mat-form-field>
+
+        <!-- Closing Time (similar configuration) -->
+        <mat-form-field appearance="outline">
+          <mat-label>Closing Time</mat-label>
+          <input
+            matInput
+            [ngxTimepicker]="closingTimePicker"
+            formControlName="closingTimeLOC"
+            [format]="24"
+            placeholder="Select closing time"
+            readonly appFormValidation [showAllErrors]="true"
+          />
+          <ngx-material-timepicker #closingTimePicker>
+          </ngx-material-timepicker>
+        </mat-form-field>
+
+        <!-- Company Type -->
+        <mat-form-field appearance="outline">
+          <mat-label>Company Type</mat-label>
+          <mat-select formControlName="companyType" required appFormValidation [showAllErrors]="true">
+            <mat-option *ngFor="let type of COMPANY_TYPES" [value]="type.value">
+              {{ type.label }}
+            </mat-option>
+          </mat-select>
+
+        </mat-form-field>
+
+        <!-- Working Days -->
+        <mat-form-field appearance="outline">
+          <mat-label>Working Days</mat-label>
+          <mat-select formControlName="workingDays" multiple required appFormValidation [showAllErrors]="true">
+            <mat-option *ngFor="let day of DAYS_OF_WEEK" [value]="day.value">
+              {{ day.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Latitude -->
+        <mat-form-field appearance="outline">
+          <mat-label>Latitude</mat-label>
+          <input matInput type="number" formControlName="latitude" required />
+          <mat-error *ngIf="form.get('latitude')?.hasError('required')">
+            Latitude is required
+          </mat-error>
+          <mat-error
+            *ngIf="
+              form.get('latitude')?.hasError('min') ||
+              form.get('latitude')?.hasError('max')
+            "
+          >
+            Latitude must be between -90 and 90
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Longitude -->
+        <mat-form-field appearance="outline">
+          <mat-label>Longitude</mat-label>
+          <input matInput type="number" formControlName="longitude" required />
+          <mat-error *ngIf="form.get('longitude')?.hasError('required')">
+            Longitude is required
+          </mat-error>
+          <mat-error
+            *ngIf="
+              form.get('longitude')?.hasError('min') ||
+              form.get('longitude')?.hasError('max')
+            "
+          >
+            Longitude must be between -180 and 180
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Owner Email -->
+        <mat-form-field appearance="outline">
+          <mat-label>Owner Email</mat-label>
+          <input matInput type="email" formControlName="ownerEmail" required appFormValidation [showAllErrors]="true"/>
+        </mat-form-field>
+
+        <!-- Submit Button -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Add Company
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

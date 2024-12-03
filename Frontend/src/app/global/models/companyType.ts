@@ -1,0 +1,4 @@
+enum companyType {
+  PERSONAL,
+  SHARED,
+}

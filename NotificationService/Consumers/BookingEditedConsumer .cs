@@ -3,20 +3,18 @@ using NotificationService.DB;
 using NotificationService.Entities;
 using Shared.Events.Booking;
 using Shared.Events.Company;
-using Shared.Events.User;
 
 namespace NotificationService.Consumers
 {
-    public class BookingEditedConsumer : IConsumer<BookingEdited>
+    public class BookingEditedConsumer : IConsumer<BookingEditRequest>
     {
         private readonly Context dbcontext;
-        IRequestClient<UserIdRequested> userClient;
         IRequestClient<NotificationAdditionalDataRequested> client;
         public BookingEditedConsumer(Context context)
         {
             dbcontext = context;
         }
-        public async Task Consume(ConsumeContext<BookingEdited> context)
+        public async Task Consume(ConsumeContext<BookingEditRequest> context)
         {
             var mess = context.Message;
 
@@ -29,7 +27,7 @@ namespace NotificationService.Consumers
             keyValues.Add("bookingid", mess.BookingId.ToString());
             keyValues.Add("productid", mess.ProductId.ToString());
 
-            var data = await client.GetResponse<NotificationAdditionalDataResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
+            var data = await client.GetResponse<NotificationAdditionalDataRequestResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
             foreach (var keyval in data.Message.Data)
             {
                 keyValues.Add(keyval.Key, keyval.Value);
@@ -39,7 +37,7 @@ namespace NotificationService.Consumers
             {
                 RecieverId = mess.WorkerId,
                 Description = "booking edited successfuly",
-                Service = ServiceType.Schedule,
+                Service = ServiceType.SCHEDULE,
                 Title = "Booking edit",
                 NotificationKeyValues = keyValues.Select(kv => new Data { Key = kv.Key, Value = kv.Value, }).ToList(),
             };

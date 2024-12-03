@@ -35,7 +35,6 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
@@ -52,7 +51,6 @@ builder.Services.AddAuthentication("Bearer")
             RoleClaimType = JwtClaimTypes.Role,
         };
     });
-
 
 var app = builder.Build();
 

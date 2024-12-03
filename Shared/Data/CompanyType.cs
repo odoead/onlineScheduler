@@ -2,7 +2,7 @@
 {
     public enum CompanyType
     {
-        Personal,
-        Shared
+        PERSONAL,
+        SHARED
     }
 }

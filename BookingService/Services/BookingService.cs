@@ -16,17 +16,19 @@ namespace BookingService.Services
         IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// check if booking can be created
         IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
         IRequestClient<UserEmailRequested> UserEmailclient;
-        public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client, IRequestClient<BookingConfirmationRequested> client2, IRequestClient<UserEmailRequested> userEmailclient)
+        IRequestClient<BookingEditRequest> BookingEditClient;
+
+        public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client,
+            IRequestClient<BookingConfirmationRequested> client2, IRequestClient<UserEmailRequested> userEmailclient,
+            IRequestClient<BookingEditRequest> bookingEditClient)
         {
             dbcontext = context;
             publishEndpoint = endpoint;
             IsValidBookingTimeClient = client;
             BookingConfirmationclient = client2;
             UserEmailclient = userEmailclient;
+            BookingEditClient = bookingEditClient;
         }
-
-
-
 
         public async Task AddBookingAsync(DateTime BookingTimeLOC, string WorkerId, string ClientEmail, int ProductId, TimeSpan? Duration = null)
         {
@@ -48,7 +50,7 @@ namespace BookingService.Services
                 ClientId = clientId,
                 WorkerId = WorkerId,
                 ProductId = ProductId,
-                Status = BookingStatus.Created,
+                Status = BookingStatus.CREATED,
 
                 StartDateLOC = BookingTimeLOC,
 
@@ -87,7 +89,7 @@ namespace BookingService.Services
         {
             var booking = await dbcontext.Bookings.FindAsync(Id) ?? throw new BadRequestException("Invalid booking ID " + Id);
 
-            if (booking.Status != BookingStatus.Created)
+            if (booking.Status != BookingStatus.CREATED)
             {
                 throw new BadRequestException("Only Created bookings can be edited.");
             }
@@ -95,16 +97,17 @@ namespace BookingService.Services
             if (booking.EndDateLOC != null)
             {
                 var duration = booking.EndDateLOC - booking.StartDateLOC;//calculate duration based on start-end diff
-                var response = await IsValidBookingTimeClient.GetResponse<IsValidBookingTimeRequestResult>(new IsValidBookingTimeRequested
+                var response = await BookingEditClient.GetResponse<BookingEditRequestResult>(new BookingEditRequest
                 {
                     StartDateLOC = BookingTimeLOC,
                     EndDateLOC = BookingTimeLOC.Add(duration.Value),
                     WorkerId = WorkerId,
-                    ProductId = booking.ProductId
+                    ProductId = booking.ProductId,
+                    BookingId = booking.Id,
                 });
-                if (response.Message.IsValid == false)
+                if (response.Message.IsEdited == false)
                 {
-                    throw new BadRequestException("The booking overlaps with an existing booking.");
+                    throw new BadRequestException("Booking edit error. Id: " + booking.Id);
                 }
                 booking.EndDateLOC = BookingTimeLOC.Add(duration.Value);
 
@@ -114,17 +117,10 @@ namespace BookingService.Services
             booking.StartDateLOC = BookingTimeLOC;
 
             await dbcontext.SaveChangesAsync();
-            await publishEndpoint.Publish(new BookingEdited
-            {
-                BookingId = booking.Id,
-                WorkerId = booking.WorkerId,
-                StartDateLOC = booking.StartDateLOC,
-                EndDateLOC = booking.EndDateLOC.Value,
-                ProductId = booking.ProductId
-            });
+
         }
 
-        public async Task ChangeBookingStatusASync(int bookingId, int newStatus)
+        public async Task ChangeBookingStatusAsync(int bookingId, int newStatus)
         {
             var booking = await dbcontext.Bookings.FindAsync(bookingId) ?? throw new NotFoundException("Invalid booking ID" + bookingId);
             if (!Enum.IsDefined(typeof(BookingStatus), newStatus))
@@ -132,13 +128,18 @@ namespace BookingService.Services
                 throw new BadRequestException("This status doesnt exist ");
             }
 
+            if ((BookingStatus)booking.Status != BookingStatus.CREATED)
+            {
+                throw new BadRequestException("You can only change the booking status of unconfirmed orders ");
+            }
+
             if (booking.EndDateLOC != null)
             {
                 switch ((BookingStatus)newStatus)
                 {
-                    case BookingStatus.Canceled:
+                    case BookingStatus.CANCELED:
 
-                        booking.Status = BookingStatus.Canceled;
+                        booking.Status = BookingStatus.CANCELED;
                         await publishEndpoint.Publish(new BookingCanceled
                         {
                             BookingId = booking.Id,
@@ -150,8 +151,8 @@ namespace BookingService.Services
                         });
                         break;
 
-                    case BookingStatus.Confirmed:
-                        booking.Status = BookingStatus.Confirmed;
+                    case BookingStatus.CONFIRMED:
+                        booking.Status = BookingStatus.CONFIRMED;
                         var confirmationResponse = await BookingConfirmationclient.GetResponse<BookingConfirmationRequestResult>(new BookingConfirmationRequested
                         {
                             BookingId = booking.Id,
@@ -165,7 +166,7 @@ namespace BookingService.Services
                         {
                             throw new BadRequestException("Booking confirmation failed");
                         }
-                        booking.Status = BookingStatus.Created;
+                        booking.Status = BookingStatus.CREATED;
                         await dbcontext.SaveChangesAsync();
                         await publishEndpoint.Publish(new BookingConfirmed
                         {

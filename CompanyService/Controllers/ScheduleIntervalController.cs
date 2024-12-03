@@ -2,6 +2,7 @@
 using CompanyService.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompanyService.Controllers
 {
@@ -57,6 +58,20 @@ namespace CompanyService.Controllers
         public async Task<IActionResult> GetWeeklySchedule(string employeeId, [FromQuery] DateTime currentDateLOC)
         {
             var schedule = await scheduleService.GetWeeklyScheduleWithBookingsAsync(employeeId, currentDateLOC);
+            return Ok(schedule);
+        }
+
+        [HttpGet("weekly")]
+        [Authorize]
+        public async Task<IActionResult> GetWeeklySchedule_Email([FromQuery] DateTime currentDateLOC)
+        {
+            var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var schedule = await scheduleService.GetWeeklyScheduleWithBookingsAsync_Email(emailClaim, currentDateLOC);
             return Ok(schedule);
         }
 

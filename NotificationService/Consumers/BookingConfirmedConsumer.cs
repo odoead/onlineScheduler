@@ -1,16 +1,15 @@
 ﻿using MassTransit;
 using NotificationService.DB;
 using NotificationService.Entities;
+using Shared.Data;
 using Shared.Events.Booking;
 using Shared.Events.Company;
-using Shared.Events.User;
 
 namespace NotificationService.Consumers
 {
     public class BookingConfirmedConsumer : IConsumer<BookingConfirmed>
     {
         private readonly Context dbcontext;
-        IRequestClient<UserIdRequested> userClient;
         IRequestClient<NotificationAdditionalDataRequested> client;
         public BookingConfirmedConsumer(Context context)
         {
@@ -28,19 +27,19 @@ namespace NotificationService.Consumers
             }
             keyValues.Add("bookingid", mess.BookingId.ToString());
             keyValues.Add("productid", mess.ProductId.ToString());
+            keyValues.Add("status", BookingStatus.CONFIRMED.ToString());
 
-            var data = await client.GetResponse<NotificationAdditionalDataResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
+            var data = await client.GetResponse<NotificationAdditionalDataRequestResult>(new NotificationAdditionalDataRequested { ProductId = mess.ProductId });
             foreach (var keyval in data.Message.Data)
             {
                 keyValues.Add(keyval.Key, keyval.Value);
             }
 
-
             var notification = new Notification
             {
                 RecieverId = mess.WorkerId,
                 Description = "booking confirmed successfuly",
-                Service = ServiceType.Schedule,
+                Service = ServiceType.SCHEDULE,
                 Title = "Booking confirmation",
                 NotificationKeyValues = keyValues.Select(kv => new Data { Key = kv.Key, Value = kv.Value, }).ToList(),
             };

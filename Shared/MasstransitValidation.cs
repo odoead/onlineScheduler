@@ -43,7 +43,6 @@ namespace Shared
             {
                 var assembly = markerType.Assembly;
 
-
                 // Find all validator types in the assembly
                 var validatorTypes = assembly.GetTypes()
                     .Where(t => t.GetInterfaces()

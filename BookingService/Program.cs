@@ -25,6 +25,8 @@ builder.Services.AddMassTransit(x =>
     x.AddRequestClient<IsValidBookingTimeRequested>();
     x.AddRequestClient<BookingConfirmationRequested>();
     x.AddRequestClient<UserEmailRequested>();
+    x.AddRequestClient<UserIdRequested>();
+    x.AddRequestClient<BookingEditRequest>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -53,7 +55,6 @@ builder.Services.AddAuthentication("Bearer")
             RoleClaimType = JwtClaimTypes.Role,
         };
     });
-
 
 var app = builder.Build();
 

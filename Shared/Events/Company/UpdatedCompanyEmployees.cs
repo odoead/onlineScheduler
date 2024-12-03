@@ -8,7 +8,7 @@ namespace Shared.Messages.Company
         public List<string> EmployeeIds { get; set; }
         public TimeSpan OpeningTimeLOC { get; set; }
         public TimeSpan ClosingTimeLOC { get; set; }
-        public List<DayOfTheWeek> WorkingDays;
+        public List<DayOfTheWeek> WorkingDays { get; set; }
 
     }
 }

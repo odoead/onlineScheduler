@@ -1,0 +1,44 @@
+<mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ company.Name }}</mat-card-title>
+      <mat-card-subtitle>{{ company.CompanyType }} Company</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="company-info">
+        <p><strong>Description:</strong> {{ company.Description }}</p>
+        <p><strong>Opening Time:</strong> {{ company.OpeningTimeLOC }}</p>
+        <p><strong>Closing Time:</strong> {{ company.ClosingTimeLOC }}</p>
+        <p><strong>Owner:</strong> {{ company.OwnerName }}</p>
+
+        <hr>
+        
+        <h3>Employees</h3>
+
+        <mat-list>
+          <mat-list-item *ngFor="let worker of company.Workers">
+            <span matListItemTitle>{{ worker.Name }}</span>
+    
+          </mat-list-item>
+        </mat-list>
+      </div>
+    </mat-card-content>
+    
+    
+
+
+    <mat-card-content>
+      
+        <h3>Products</h3>
+
+        <mat-list>
+          <mat-list-item *ngFor="let product of company.Products">
+            <span matListItemTitle>{{ product.Name }}</span>
+            <span matListItemTitle>{{ product.DurationTime  }}</span>
+
+          </mat-list-item>
+        </mat-list>
+    </mat-card-content>
+    
+    
+</mat-card>

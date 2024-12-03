@@ -17,7 +17,7 @@ builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Conf
 builder.Services.AddScoped<ICompanyService, CompanyServ>();
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumersFromNamespaceContaining<BookingConfirmationRequestedConsumer>();
+    x.AddConsumersFromNamespaceContaining<BookingConfirmationRequestConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("company", false));
     x.AddRequestClient<UserEmailRequested>();
 
@@ -31,7 +31,6 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
 });
-
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
@@ -49,7 +48,6 @@ builder.Services.AddAuthentication("Bearer")
             RoleClaimType = JwtClaimTypes.Role,
         };
     });
-
 
 builder.Services.AddScoped<IBookingValidationService, BookingValidationService>();
 builder.Services.AddScoped<ICompanyService, CompanyServ>();

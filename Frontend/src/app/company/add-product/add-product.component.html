@@ -1,0 +1,58 @@
+<div class="create-product">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Create Product</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <mat-form-field appearance="outline">
+          <mat-label>Product Name</mat-label>
+          <input matInput formControlName="name" required  appFormValidation [showAllErrors]="true"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" appFormValidation [showAllErrors]="true"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Duration</mat-label>
+          <input
+            matInput
+            [ngxTimepicker]="durationPicker"
+            formControlName="duration"
+            [format]="24"
+            placeholder="Select duration"
+            readonly appFormValidation [showAllErrors]="true"
+          />
+          <ngx-material-timepicker #durationPicker></ngx-material-timepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Assign Employees</mat-label>
+          <mat-select formControlName="workerIds" multiple appFormValidation [showAllErrors]="true">
+            <mat-option *ngFor="let worker of workers" [value]="worker.Id">
+              {{ worker.Name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="actions">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="form.invalid"
+          >
+            Save
+          </button>
+          
+          <button mat-raised-button color="warn" (click)="cancel()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

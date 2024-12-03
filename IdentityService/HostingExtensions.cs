@@ -6,6 +6,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Shared.Events.User;
 
 namespace IdentityService;
 
@@ -20,9 +21,11 @@ internal static class HostingExtensions
 
         builder.Services.AddMassTransit(x =>
         {
-            x.AddConsumersFromNamespaceContaining<UserEmailRequestedConsumer>();
+            x.AddConsumersFromNamespaceContaining<UserEmailRequestConsumer>();
+            x.AddRequestClient<UserCompanyRolesRequested>();
+
             x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("user", false));
-            
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 cfg.Host(builder.Configuration["RabbitMq:Host"], "/", host =>
@@ -34,7 +37,7 @@ internal static class HostingExtensions
             });
 
         });
-        
+
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();

@@ -1,4 +1,4 @@
-﻿using CompanyService.DTO;
+﻿using CompanyService.DTO.Company;
 
 namespace CompanyService.Interfaces
 {

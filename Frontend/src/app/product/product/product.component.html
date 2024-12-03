@@ -1,0 +1,32 @@
+<div class="product-container mat-elevation-z4">
+    <nav mat-tab-nav-bar>
+        <button mat-tab-link (click)="redirectToHome()">Home</button>
+        <button mat-tab-link (click)="redirectToCompany(product.Company.Id)">
+          {{ product.Company.Name }}
+        </button>
+        <span mat-tab-link>{{ product.Name}}</span>
+      </nav>
+  
+    <!-- Product Details -->
+    <div class="product-details">
+      <h1>{{ product.Name }}</h1>
+      <p>{{ product.Description }}</p>
+      <p><strong>Duration:</strong> {{ product.Duration.hr }}hr {{ product.Duration.min }}min</p>
+    </div>
+  
+    <!-- Worker Cards -->
+    <div class="workers-container">
+      <h2>Specialists Available</h2>
+      <div *ngFor="let worker of product.Workers" class="worker-card mat-elevation-z2" (click)="redirectToWorker(worker.Id)">
+        <div class="worker-details">
+          <h3>{{ worker.Name }}</h3>
+        </div>
+        <button mat-raised-button color="primary" class="book-button" (click)="bookWorker(worker.Id); $event.stopPropagation()">
+          Book 
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  

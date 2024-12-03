@@ -94,8 +94,8 @@ namespace CompanyService.Services
             var scheduleIntervals = await dbcontext.ScheduleIntervals
                 .Where(si => si.CompanyId == companyId &&
                     si.WorkerId == workerId &&
-                    si.WeekDay == bookingDayOfWeek &&
-                    si.IntervalType == IntervalType.Work)
+                    si.WeekDay == (DayOfTheWeek)bookingDayOfWeek &&
+                    si.IntervalType == IntervalType.WORK)
                 .ToListAsync();
             if (!scheduleIntervals.Any())
             {
@@ -153,6 +153,17 @@ namespace CompanyService.Services
                     (startDateLoc <= b.StartDateLOC && endDateLoc >= b.EndDateLOC) ||   //новый букинг полностью охватывает существующий
                     (startDateLoc >= b.StartDateLOC && endDateLoc <= b.EndDateLOC)      //новый букинг полностью внутри существующего
                     );
+        }
+        public async Task<bool> HasOverlappingBookings(string workerId, DateTime startDateLoc, DateTime endDateLoc, int? excludeBookingId = null)
+        {
+            return await dbcontext.Bookings
+                .Where(b => b.WorkerId == workerId && b.StartDateLOC.Date == startDateLoc.Date && (!excludeBookingId.HasValue || b.Id != excludeBookingId.Value))
+                .AnyAsync(b =>
+                    (startDateLoc >= b.StartDateLOC && startDateLoc < b.EndDateLOC) ||
+                    (endDateLoc > b.StartDateLOC && endDateLoc <= b.EndDateLOC) ||
+                    (startDateLoc <= b.StartDateLOC && endDateLoc >= b.EndDateLOC) ||
+                    (startDateLoc >= b.StartDateLOC && endDateLoc <= b.EndDateLOC)
+                );
         }
 
         private static bool IsBookingActive(Booking booking, DateTime currentUtcTime)

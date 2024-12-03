@@ -18,7 +18,6 @@ namespace Shared
             ActionExecutionDelegate next)
         {
 
-
             // Validate each parameter that has a validator
             foreach (var arg in context.ActionArguments)
             {

@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Add Employees</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline">
+      <mat-label>New Email</mat-label>
+      <input
+        matInput
+        formControlName="email"
+        type="email"
+        placeholder="Enter employee email"
+        appFormValidation
+        [customErrorMessages]="{
+          required: 'Email is required',
+          email: 'Please enter a valid email address'
+        }"
+        [showAllErrors]="true"
+      />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button mat-button (click)="dialogRef.close()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="employeeForm.invalid"
+  >
+    Add Employee
+  </button>
+</mat-dialog-actions>
