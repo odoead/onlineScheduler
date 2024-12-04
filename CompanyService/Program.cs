@@ -7,6 +7,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Events.User;
+using Shared.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,10 +54,11 @@ builder.Services.AddScoped<IBookingValidationService, BookingValidationService>(
 builder.Services.AddScoped<ICompanyService, CompanyServ>();
 builder.Services.AddScoped<IProductService, ProductServ>();
 builder.Services.AddScoped<IScheduleService, ScheduleServ>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.ConfigureExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

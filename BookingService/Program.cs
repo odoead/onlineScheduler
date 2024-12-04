@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Events.Booking;
 using Shared.Events.User;
+using Shared.Exceptions;
 using E = BookingService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +58,8 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 var app = builder.Build();
+
+app.ConfigureExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

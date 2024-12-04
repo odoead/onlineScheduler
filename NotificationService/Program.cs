@@ -7,6 +7,7 @@ using NotificationService.DB;
 using NotificationService.Interfaces;
 using Shared.Events.Company;
 using Shared.Events.User;
+using Shared.Exceptions;
 using E = NotificationService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,8 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 var app = builder.Build();
+
+app.ConfigureExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

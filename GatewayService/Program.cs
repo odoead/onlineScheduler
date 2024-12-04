@@ -1,5 +1,6 @@
 using IdentityModel;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,8 @@ builder.Services.AddCors(options =>
     });
 });
 var app = builder.Build();
+
+app.ConfigureExceptionHandler();
 
 app.UseCors();
 app.MapReverseProxy();

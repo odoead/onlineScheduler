@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Shared.Events.User;
+using Shared.Exceptions;
 
 namespace IdentityService;
 
@@ -79,6 +80,8 @@ internal static class HostingExtensions
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
+        app.ConfigureExceptionHandler();
+
         app.UseSerilogRequestLogging();
 
         if (app.Environment.IsDevelopment())
