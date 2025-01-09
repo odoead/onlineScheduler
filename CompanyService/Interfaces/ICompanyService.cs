@@ -10,6 +10,6 @@ namespace CompanyService.Interfaces
         public Task AddEmployeesToCompany(int companyId, List<string> UserEmails);
         public Task<bool> RemoveEmployeeFromCompany(int companyId, string workerId);
         public Task<GetCompanyDTO> GetCompany(int companyId);
-
+        public Task<List<CompanyMinDTO>> GetCompaniesMin();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using CompanyService.DB;
+using CompanyService.Interfaces;
 using CompanyService.Services;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +11,8 @@ namespace CompanyService.Consumers
     public class BookingEditRequestConsumer : IConsumer<BookingEditRequest>
     {
         private readonly Context dbcontext;
-        private readonly BookingValidationService validationService;
-        public BookingEditRequestConsumer(Context context, BookingValidationService validationService)
+        private readonly IBookingValidationService validationService;
+        public BookingEditRequestConsumer(Context context, IBookingValidationService validationService)
         {
             dbcontext = context;
             this.validationService = validationService;

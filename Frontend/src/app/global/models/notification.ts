@@ -1,8 +1,8 @@
 export interface Notification_{
-      Id:number 
-      RecieverId:string
-      Service:string
-      Title:string 
-      Description :string
+      id:number 
+      recieverId:string
+      service:string
+      title:string 
+      description :string
       notificationKeyValues: { [key: string]: string };
 }

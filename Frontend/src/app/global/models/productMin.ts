@@ -1,7 +1,7 @@
 import { TimeSpan } from './timespan';
 
 export interface ProductMin {
-  Id: number;
-  DurationTime: TimeSpan;
-  Title: string;
+  id: number;
+  durationTime: TimeSpan;
+  title: string;
 }

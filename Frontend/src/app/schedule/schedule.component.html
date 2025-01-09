@@ -1,21 +1,26 @@
 <mat-card>
   <mat-card-title>Weekly work schedule</mat-card-title>
   <mat-table [dataSource]="weeklySchedule" class="mat-elevation-z8" matSort>
- 
-    <ng-container matColumnDef="weekday">
+    
+    <ng-container matColumnDef="day">
       <mat-header-cell *matHeaderCellDef> Weekday </mat-header-cell>
       <mat-cell *matCellDef="let interval">
-        {{ getWeekdayName(interval.WeekDay) }}
+        {{ getWeekdayName(interval.weekDay) }}
       </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="intervals">
       <mat-header-cell *matHeaderCellDef> Schedule </mat-header-cell>
       <mat-cell *matCellDef="let interval">
-        <div *ngFor="let booking of interval.Bookings" class="booking-item">
-          <span class="time">{{ formatTime(interval.StartTimeLOC) }} - {{ formatTime(interval.FinishTimeLOC) }}</span>
-          <a [routerLink]="['/product', booking.ProductId]" class="product-link">
-            {{ booking.ProductName }}
+        <span class="time">
+          {{ formatTime(interval.startTimeLOC) }} - {{ formatTime(interval.finishTimeLOC) }}
+        </span>
+        <div *ngFor="let booking of interval.bookings" class="booking-item">
+          <span class="time">
+            {{ formatTime(booking.startDateLOC) }} - {{ formatTime(booking.endDateLOC) }}
+          </span>
+          <a [routerLink]="['/product', booking.productId]" class="product-link">
+            {{ booking.productName }}
           </a>
         </div>
       </mat-cell>

@@ -1,6 +1,6 @@
 export interface CreateBooking {
-  BookingTimeLOC: Date;
-  Duration: string;
-  WorkerId: string;
-  ProductId: number;
+  bookingTimeLOC: Date;
+  duration: string;
+  workerId: string;
+  productId: number;
 }

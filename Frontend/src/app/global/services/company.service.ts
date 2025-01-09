@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { Company } from '../models/company';
 import { CreateCompany } from '../models/createCompany';
 import { HeadersService } from './headerService';
+import { CompanyMin } from '../models/companyMin';
 
 @Injectable({
   providedIn: 'root'
@@ -40,4 +41,10 @@ export class CompanyService {
     const headers =  HeadersService.getPageLoad();
     return this.http.post<number>(`${this.baseUrl}/api/company`, createCompany,{headers});
   }
+
+  public getCompaniesMin():Observable<CompanyMin[]>{
+    const headers =  HeadersService.getPageLoad();
+    return this.http.get<CompanyMin[]>(`${this.baseUrl}/api/company` ,{headers});
+  }
+
 }

@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { Product } from '../../global/models/product';
 import { UpdateProduct } from '../../global/models/updateProduct';
 import {
@@ -22,6 +22,7 @@ import { FormValidationDirective } from '../../global/directives/form-validation
 import { UserMin } from '../../global/models/userMin';
 import { TimeSpanService } from '../../global/services/timeSpanService';
 import { ProductService } from '../../global/services/product.service';
+import { DialogModule } from '@angular/cdk/dialog';
 
 @Component({
   selector: 'app-edit-roduct',
@@ -37,7 +38,7 @@ import { ProductService } from '../../global/services/product.service';
     MatInputModule,
     MatSelectModule,
     NgxMaterialTimepickerModule,
-    FormValidationDirective,
+    FormValidationDirective,MatDialogModule
   ],
   templateUrl: './edit-product.component.html',
   styleUrl: './edit-product.component.css',
@@ -59,17 +60,17 @@ export class EditProductComponent implements OnInit {
   ngOnInit(): void {
     this.workers = this.data.workers;
 
-    this.selectedWorkerIds = this.data.product.Workers.map(
-      (worker) => worker.Id
+    this.selectedWorkerIds = this.data.product.workers.map(
+      (worker) => worker.id
     );
 
     this.form = this.fb.group({
       name: [
-        this.data.product.Name,
+        this.data.product.name,
         [Validators.required, Validators.minLength(3)],
       ],
-      description: [this.data.product.Description, Validators.required],
-      duration: [this.data.product.Duration, Validators.required],
+      description: [this.data.product.description, Validators.required],
+      duration: [this.data.product.duration, Validators.required],
       workerIds: [this.selectedWorkerIds, Validators.required],
     });
   }
@@ -79,10 +80,10 @@ export class EditProductComponent implements OnInit {
       const formValue = this.form.value;
 
       const updatedProduct: UpdateProduct = {
-        Name: formValue.name,
-        Description: formValue.description,
-        Duration:this.timespanService.formatTimePicker( formValue.duration),
-        WorkerIds: formValue.workerIds,
+        name: formValue.name,
+        description: formValue.description,
+        duration:this.timespanService.formatTimePicker( formValue.duration),
+        workerIds: formValue.workerIds,
       };
 
       this.dialogRef.close(updatedProduct);

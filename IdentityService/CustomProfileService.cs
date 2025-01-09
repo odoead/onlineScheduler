@@ -39,7 +39,7 @@ namespace IdentityService
             //Add company role claims
             var companyRoles = await _client.GetResponse<UserCompanyRolesRequestResult>(new UserCompanyRolesRequested { UserId = user.Id });
             claims.AddRange(companyRoles.Message.Roles.Select(role => new Claim("company_role", role.Key + "_" + role.Value)));
-
+            
             // Include the claims in the issued token
             context.IssuedClaims.AddRange(claims);
         }

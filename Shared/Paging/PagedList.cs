@@ -1,6 +1,6 @@
 ﻿namespace Shared.Paging
 {
-    public class PagedList<T>
+    public class PagedList<T> where T : class
     {
         public MetaData MetaData { get; }
         public List<T> DataList { get; }

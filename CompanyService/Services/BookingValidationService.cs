@@ -22,9 +22,7 @@ namespace CompanyService.Services
 
             return await dbcontext.Bookings
                 .Where(b => b.WorkerId == workerId)
-                .Include(b => b.Product.Company)
-                .Include(b => b.Worker.CompanyWorkAssignments)
-                    .ThenInclude(cwa => cwa.Company)
+                .Include(b => b.Product).ThenInclude(p => p.Company)
                 .AnyAsync(b => IsBookingActive(b, currentDateTime));
         }
 

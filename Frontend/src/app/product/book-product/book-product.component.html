@@ -17,7 +17,7 @@
       <mat-radio-button
         *ngFor="let slot of availableSlots"
         [value]="slot">
-        {{ slot.BeginTime.hr }}:{{ slot.BeginTime.min }} - {{ slot.EndTime.hr }}:{{ slot.EndTime.min }}
+        {{ slot.beginTime.hr }}:{{ slot.beginTime.min }} - {{ slot.endTime.hr }}:{{ slot.endTime.min }}
       </mat-radio-button>
     </mat-radio-group>
   </div>

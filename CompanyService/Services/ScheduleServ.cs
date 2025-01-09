@@ -239,6 +239,7 @@ namespace CompanyService.Services
             return (StartTime <= company.ClosingTimeLOC && StartTime >= company.OpeningTimeLOC) &&
                 (FinishTime <= company.ClosingTimeLOC && FinishTime >= company.OpeningTimeLOC);
         }
+
         private async Task<bool> IsOverlappingIntervalAsync(TimeSpan StartTime, TimeSpan FinishTime, int weekDay, string employeeId, int? excludeIntervalId = null)
         {
             var intervals = dbcontext.ScheduleIntervals

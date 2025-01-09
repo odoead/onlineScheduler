@@ -1,6 +1,6 @@
 export interface Booking {
-  ProductName: String;
-  ProductId: Number;
-  StartDateLOC: Date;
-  EndDateLOC: Date;
+  productName: String;
+  productId: Number;
+  startDateLOC: Date;
+  endDateLOC: Date;
 }

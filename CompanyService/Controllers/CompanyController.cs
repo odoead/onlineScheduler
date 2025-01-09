@@ -73,10 +73,11 @@ namespace CompanyService.Controllers
         }
 
         [HttpGet()]
-        public async Task<IActionResult> GetCompanya()
+        public async Task<IActionResult> GetCompanies()
         {
 
-            return Ok(888888);
+            var cms = await companyService.GetCompaniesMin();
+            return Ok(cms);
         }
     }
 }

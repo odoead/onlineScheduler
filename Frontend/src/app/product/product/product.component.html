@@ -1,27 +1,27 @@
 <div class="product-container mat-elevation-z4">
     <nav mat-tab-nav-bar>
         <button mat-tab-link (click)="redirectToHome()">Home</button>
-        <button mat-tab-link (click)="redirectToCompany(product.Company.Id)">
-          {{ product.Company.Name }}
+        <button mat-tab-link (click)="redirectToCompany(product.company.id)">
+          {{ product.company.name }}
         </button>
-        <span mat-tab-link>{{ product.Name}}</span>
+        <span mat-tab-link>{{ product.name}}</span>
       </nav>
   
     <!-- Product Details -->
     <div class="product-details">
-      <h1>{{ product.Name }}</h1>
-      <p>{{ product.Description }}</p>
-      <p><strong>Duration:</strong> {{ product.Duration.hr }}hr {{ product.Duration.min }}min</p>
+      <h1>{{ product.name }}</h1>
+      <p>{{ product.description }}</p>
+      <p><strong>Duration:</strong> {{ product.duration.hr }}hr {{ product.duration.min }}min</p>
     </div>
   
     <!-- Worker Cards -->
     <div class="workers-container">
       <h2>Specialists Available</h2>
-      <div *ngFor="let worker of product.Workers" class="worker-card mat-elevation-z2" (click)="redirectToWorker(worker.Id)">
+      <div *ngFor="let worker of product.workers" class="worker-card mat-elevation-z2" (click)="redirectToWorker(worker.id)">
         <div class="worker-details">
-          <h3>{{ worker.Name }}</h3>
+          <h3>{{ worker.name }}</h3>
         </div>
-        <button mat-raised-button color="primary" class="book-button" (click)="bookWorker(worker.Id); $event.stopPropagation()">
+        <button mat-raised-button color="primary" class="book-button" (click)="bookWorker(worker.id); $event.stopPropagation()">
           Book 
         </button>
       </div>

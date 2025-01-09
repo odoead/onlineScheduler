@@ -4,16 +4,16 @@ import { TimeSpan } from './timespan';
 import { UserMin } from './userMin';
 
 export interface Company {
-  Id: number;
-  Name: string;
-  Description: string;
-  OpeningTimeLOC: TimeSpan;
-  ClosingTimeLOC: TimeSpan;
-  CompanyType: string;
-  OwnerId: string;
-  OwnerName: string;
-  Products: ProductMin[];
-  Workers: UserMin[];
-  Latitude: number;
-  Longitude: number;
+  id: number;
+  name: string;
+  description: string;
+  openingTimeLOC: TimeSpan;
+  closingTimeLOC: TimeSpan;
+  companyType: string;
+  ownerId: string;
+  ownerName: string;
+  products: ProductMin[];
+  workers: UserMin[];
+  latitude: number;
+  longitude: number;
 }

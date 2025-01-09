@@ -66,7 +66,7 @@ export class BookProductComponent {
     if (this.selectedDate) {
       this.sceduleIntervalService.getEmptyScheduleTimeByDate(this.workerId,this.selectedDate.toString(),false)
       .subscribe((windows) => {this.availableSlots = windows.filter((w) =>
-              w.EndTime.hr * 60 + w.EndTime.min -(w.BeginTime.hr * 60 + w.BeginTime.min) >=this.timespanService.getTimeSpanMinuteDuration(this.product.Duration)
+              w.endTime.hr * 60 + w.endTime.min -(w.beginTime.hr * 60 + w.beginTime.min) >=this.timespanService.getTimeSpanMinuteDuration(this.product.duration)
             );
         });
         
@@ -80,10 +80,10 @@ export class BookProductComponent {
       const formValue = this.form.value;
 
       const bookingData: CreateBooking = {
-        BookingTimeLOC: new Date(this.selectedDate!.setHours(0, this.selectedStartTime)),//minutes automatically convert to hr if >60 
-        Duration: `${this.data.product.Duration.hr}:${this.data.product.Duration.min}:00`,
-        WorkerId: this.data.workerId,
-        ProductId: this.data.productId, 
+        bookingTimeLOC: new Date(this.selectedDate!.setHours(0, this.selectedStartTime)),//minutes automatically convert to hr if >60 
+        duration: `${this.data.product.duration.hr}:${this.data.product.duration.min}:00`,
+        workerId: this.data.workerId,
+        productId: this.data.productId, 
       };
 
       this.bookingService.addBooking(bookingData).subscribe({

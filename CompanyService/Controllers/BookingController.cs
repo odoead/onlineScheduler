@@ -25,9 +25,9 @@ namespace CompanyService.Controllers
                 return Unauthorized();
             }
 
-            var bookings = bookingService.GetBookingsAsync(emailClaim);
+            var bookings = await bookingService.GetBookingsAsync(emailClaim);
 
-            return Ok();
+            return Ok(bookings);
 
         }
     }

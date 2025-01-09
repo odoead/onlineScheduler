@@ -8,7 +8,7 @@ export function errorHandlingInterceptor(router: Router) {
       catchError((error: HttpErrorResponse) => {
         if (error) {
 
-          const isPageLoad= req.headers.get('Page-Load') === 'true';//if error happens while fetching page data then nav to error page instead
+          const isPageLoad:boolean= req.headers.get('Page-Load') === 'true';//if error happens while fetching page data then nav to error page instead
           // if error happens with loaded page then print error 
 
           if (error.status === 400) {

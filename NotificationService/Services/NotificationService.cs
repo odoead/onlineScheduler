@@ -11,7 +11,8 @@ namespace NotificationService.Services
 {
     public class NotificationService : INotificationService
     {
-        private Context dbcontext; IRequestClient<UserEmailRequested> _client;
+        private Context dbcontext;
+        private IRequestClient<UserEmailRequested> _client;
 
         public NotificationService(Context context, IRequestClient<UserEmailRequested> client)
         {

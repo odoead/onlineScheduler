@@ -55,8 +55,8 @@ export class ScheduleService {
     const newWindows: EmptyWindow[] = [];
   
     emptyWindows.forEach(w => {
-      const windowStart = this.timespanService.getTimeSpanMinuteDuration(w.BeginTime);
-      const windowDuration = this.timespanService.getTimeSpanMinuteDuration(w.Duration);
+      const windowStart = this.timespanService.getTimeSpanMinuteDuration(w.beginTime);
+      const windowDuration = this.timespanService.getTimeSpanMinuteDuration(w.duration);
   
       if (windowDuration < taskDurationMinutes) {
         return;
@@ -67,9 +67,9 @@ export class ScheduleService {
   
       while (remainingDuration >= taskDurationMinutes) {
         newWindows.push({
-          BeginTime: this.timespanService.minutesToTimeSpan(currentStart),
-          EndTime: this.timespanService.minutesToTimeSpan(currentStart + taskDurationMinutes),
-          Duration: taskDuration
+          beginTime: this.timespanService.minutesToTimeSpan(currentStart),
+          endTime: this.timespanService.minutesToTimeSpan(currentStart + taskDurationMinutes),
+          duration: taskDuration
         });
   
         currentStart += taskDurationMinutes;

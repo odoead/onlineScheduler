@@ -1,3 +1,4 @@
+using BookingService.Consumers;
 using BookingService.DB;
 using BookingService.Interfaces;
 using IdentityModel;
@@ -21,7 +22,7 @@ builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Conf
 builder.Services.AddScoped<IBookingService, E.BookingService>();
 builder.Services.AddMassTransit(x =>
 {
-    // x.AddConsumersFromNamespaceContaining<>();
+    x.AddConsumersFromNamespaceContaining<WorkerBookingsRequestConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("booking", false));
     x.AddRequestClient<IsValidBookingTimeRequested>();
     x.AddRequestClient<BookingConfirmationRequested>();

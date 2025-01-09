@@ -6,6 +6,7 @@ using IdentityModel;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Events.Booking;
 using Shared.Events.User;
 using Shared.Exceptions;
 
@@ -15,12 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<ICompanyService, CompanyServ>();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumersFromNamespaceContaining<BookingConfirmationRequestConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("company", false));
     x.AddRequestClient<UserEmailRequested>();
+    x.AddRequestClient<WorkerBookingsRequested>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

@@ -13,8 +13,8 @@
         <h3>Notifications</h3>
 
         <mat-list-item *ngFor="let notification of notifications">
-          <div mat-line>{{ notification.Title }}</div>
-          <div mat-line>{{ notification.Description }}</div>
+          <div mat-line>{{ notification.title }}</div>
+          <div mat-line>{{ notification.description }}</div>
 
           <div *ngFor="let key of objectKeys(notification.notificationKeyValues)">
             <div mat-line>
@@ -33,5 +33,9 @@
 
   <mat-sidenav-content>
     <button mat-button (click)="sidenav.toggle()">Toggle History</button>
+
+
+
+    
   </mat-sidenav-content>
 </mat-sidenav-container>

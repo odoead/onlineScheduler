@@ -1,0 +1,19 @@
+<nav>
+  <span>Online scheduler</span>
+    <div>
+      <span *ngIf="isLogged">Welcome, {{ profile?.name }}</span>
+      <span *ngIf="isLogged">
+        Roles:
+        <span *ngIf="isOwner"> companyOwner</span>
+        <span *ngIf="isWorker"> companyWorker</span>
+
+      </span>
+    </div>
+    <div>
+      <button *ngIf="!isLogged" (click)="login()">Login</button>
+     <!----  <button *ngIf="!isLogged" (click)="register()">Register</button> -->
+      <button *ngIf="isLogged" (click)="logout()">Logout</button>
+      <button *ngIf="!isLogged" (click)="login()">To business acc</button>
+
+    </div>
+  </nav>

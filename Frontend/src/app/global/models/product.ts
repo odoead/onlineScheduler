@@ -3,9 +3,9 @@ import { TimeSpan } from './timespan';
 import { UserMin } from './userMin';
 
 export interface Product {
-  Name: string;
-  Description: string;
-  Duration: TimeSpan;
-  Workers: UserMin[];
-  Company: CompanyMin;
+  name: string;
+  description: string;
+  duration: TimeSpan;
+  workers: UserMin[];
+  company: CompanyMin;
 }

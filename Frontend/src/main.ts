@@ -10,5 +10,5 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideHttpClient(withFetch()),
     importProvidersFrom(RouterModule.forRoot(routes)),
-  ],
+   ],
 }).catch((err) => console.error(err));

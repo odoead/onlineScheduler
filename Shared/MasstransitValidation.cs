@@ -37,6 +37,13 @@ namespace Shared
 
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// register validators for objects in DI. 
+        /// builder.services.AddValidatorsAndFilters(typeof(T1),typeof(T2))
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="markerTypes">types for which validation is added </param>
+        /// <returns></returns>
         public static IServiceCollection AddValidatorsAndFilters(this IServiceCollection services, params Type[] markerTypes)
         {
             foreach (var markerType in markerTypes)

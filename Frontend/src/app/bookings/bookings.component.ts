@@ -8,7 +8,6 @@ import { ConfirmDialogComponent } from '../global/confirm-dialog/confirm-dialog.
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
-import { EditProductComponent } from '../product/edit-product/edit-product.component';
 
 @Component({
   selector: 'app-bookings',
@@ -42,9 +41,9 @@ export class BookingsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         if (action === 'confirm') {
-          this.bookingService.changeBookingStatus(booking.Id, BookingStatus.CONFIRMED);
+          this.bookingService.changeBookingStatus(booking.id, BookingStatus.CONFIRMED);
         } else if (action === 'cancel') {
-          this.bookingService.changeBookingStatus(booking.Id, BookingStatus.CANCELED);
+          this.bookingService.changeBookingStatus(booking.id, BookingStatus.CANCELED);
       }}
       this.bookingService.getBookings(true).subscribe((data) => (this.bookings = data));
     });

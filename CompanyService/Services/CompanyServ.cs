@@ -229,19 +229,19 @@ namespace CompanyService.Services
                 .Where(w => responseUsers.Select(r => r.Id).Contains(w.IdentityServiceId))
                 .ToListAsync();
 
-            foreach (var user in responseUsers)
-            {
-                if (!existingWorkers.Any(w => w.IdentityServiceId == user.Id))
+            var newWorkers = responseUsers.Where(u => !existingWorkers.Select(q => q.Id).Contains(u.Id))
+                .Select(user =>
+                new Worker
                 {
-                    var newWorker = new Worker
-                    {
-                        IdentityServiceId = user.Id,
-                        FullName = user.UserName,
-                    };
-                    await dbcontext.Workers.AddAsync(newWorker);
-                }
+                    IdentityServiceId = user.Id,
+                    FullName = user.UserName,
+                }).ToList();
+
+            if (newWorkers.Any())
+            {
+                await dbcontext.Workers.AddRangeAsync(newWorkers);
+                await dbcontext.SaveChangesAsync();
             }
-            await dbcontext.SaveChangesAsync();
         }
 
         private List<ScheduleInterval> CreateScheduleForWorkers(List<string> workerIds, int companyId, TimeSpan startTime, TimeSpan finishTime, List<DayOfTheWeek> weekday)
@@ -276,5 +276,9 @@ namespace CompanyService.Services
 
         }
 
+        public async Task<List<CompanyMinDTO>> GetCompaniesMin()
+        {
+            return await dbcontext.Companies.Select(q => new CompanyMinDTO { Id = q.Id, Name = q.Name }).ToListAsync();
+        }
     }
 }

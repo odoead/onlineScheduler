@@ -37,8 +37,9 @@ export class ScheduleComponent {
   }
 
   getWeekdayName(weekDay: number): string {
-    return DayOfTheWeek[weekDay];
-  }
+    const day = this.DAYS_OF_WEEK.find(d => d.value === weekDay);
+    return day ? day.label : '';
+    }
   
   formatTime(time:TimeSpan)
   {

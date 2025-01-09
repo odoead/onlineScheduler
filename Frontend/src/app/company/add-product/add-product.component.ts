@@ -40,7 +40,7 @@ export class AddProductComponent {
       name: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', Validators.required],
       duration: ['', Validators.required], 
-      workerIds: [this.workers.map((w)=>w.Id), Validators.required], 
+      workerIds: [this.workers.map((w)=>w.id), Validators.required], 
     });
   }
 
@@ -49,11 +49,11 @@ export class AddProductComponent {
       const formValue = this.form.value;
 
       const newProduct: CreateProduct = {
-        Name: formValue.name,
-        Description: formValue.description,
-        Duration: this.timespanService.formatTimePicker(formValue.duration),
-        CompanyId: this.companyId,
-        WorkerIds: formValue.workerIds,
+        name: formValue.name,
+        description: formValue.description,
+        duration: this.timespanService.formatTimePicker(formValue.duration),
+        companyId: this.companyId,
+        workerIds: formValue.workerIds,
       };
 
       this.productService.addProduct(newProduct).subscribe({

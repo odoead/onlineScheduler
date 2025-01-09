@@ -18,12 +18,11 @@ namespace CompanyService.Consumers
             var mess = context.Message;
             Dictionary<string, string> dataPairs = new Dictionary<string, string>();
 
-            var productName = await dbcontext.Products.FirstOrDefaultAsync(q => q.Id == mess.ProductId).Select(q => q.Name);
-            dataPairs.Add("productname", productName);
+            var product  = await dbcontext.Products.Include(q=>q.Company).FirstOrDefaultAsync(q => q.Id == mess.ProductId) ;
+            dataPairs.Add("productname", product.Name);
 
-            var company = await dbcontext.Products.FirstOrDefaultAsync(q => q.Id == mess.ProductId).Select(q => q.Company);
-            dataPairs.Add("companyid", company.Id.ToString());
-            dataPairs.Add("companyname", company.Name);
+            dataPairs.Add("companyid", product.Company.Id.ToString());
+            dataPairs.Add("companyname", product.Company.Name);
 
             await context.RespondAsync<NotificationAdditionalDataRequestResult>(new NotificationAdditionalDataRequestResult { Data = dataPairs });
         }

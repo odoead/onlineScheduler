@@ -49,12 +49,12 @@ export class AdminCompanyComponent implements OnInit {
   addEmployee(): void {
     const dialogRef = this.dialog.open(AddEmployeeComponent, {
       width: '400px',
-      data: { companyId: this.company.Id }
+      data: { companyId: this.company.id }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.getCompany(this.company.Id,false);
+        this.getCompany(this.company.id,false);
       }
     });
   }
@@ -70,12 +70,12 @@ export class AdminCompanyComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.companyService.removeEmployeeFromCompany(this.company.Id, workerId)
+        this.companyService.removeEmployeeFromCompany(this.company.id, workerId)
           .subscribe({
             next: (result) => {
               alert('Employee removed successfully');
               // Refresh company details
-              this.getCompany(this.company.Id, true);
+              this.getCompany(this.company.id, true);
             },
             error: () => {
               alert('Failed to remove employee');
@@ -96,7 +96,7 @@ export class AdminCompanyComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.companyService.deleteCompany(this.company.Id)
+        this.companyService.deleteCompany(this.company.id)
           .subscribe({
             next: () => {
               alert('Company deleted successfully');
@@ -114,12 +114,12 @@ export class AdminCompanyComponent implements OnInit {
   addProduct(): void {
     const dialogRef = this.dialog.open(AddProductComponent, {
       width: '400px',
-      data: { companyId: this.company.Id }
+      data: { companyId: this.company.id }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.getCompany(this.company.Id,false);
+        this.getCompany(this.company.id,false);
       }
     });
   }
@@ -139,7 +139,7 @@ export class AdminCompanyComponent implements OnInit {
           .subscribe({
             next: (result) => {
               alert('Product removed');
-              this.getCompany(this.company.Id,false);
+              this.getCompany(this.company.id,false);
             },
             error: () => {
               alert('Failed to remove product');
@@ -156,7 +156,7 @@ export class AdminCompanyComponent implements OnInit {
         width: '350px',
         data: {
           product,
-          workers: this.company.Workers, 
+          workers: this.company.workers, 
         },
       });
 
@@ -165,7 +165,7 @@ export class AdminCompanyComponent implements OnInit {
           this.productService.updateProduct(productId, updatedProduct).subscribe({
             next: () => {
               alert('Product updated successfully');
-              this.getCompany(this.company.Id,false);
+              this.getCompany(this.company.id,false);
             },
             error: () => {
               alert('Failed to update product');

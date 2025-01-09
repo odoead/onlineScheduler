@@ -166,7 +166,6 @@ namespace BookingService.Services
                         {
                             throw new BadRequestException("Booking confirmation failed");
                         }
-                        booking.Status = BookingStatus.CREATED;
                         await dbcontext.SaveChangesAsync();
                         await publishEndpoint.Publish(new BookingConfirmed
                         {
