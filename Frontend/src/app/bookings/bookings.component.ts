@@ -8,6 +8,7 @@ import { ConfirmDialogComponent } from '../global/confirm-dialog/confirm-dialog.
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
+import { BookingStatus } from '../global/models/bookingStatus';
 
 @Component({
   selector: 'app-bookings',

@@ -1,4 +1,4 @@
-enum BookingStatus {
+export enum BookingStatus {
   CREATED,
   CONFIRMED,
   CANCELED,

@@ -3,6 +3,7 @@ import { ServerErrorComponent } from './global/server-error/server-error.compone
 import { NotFoundComponent } from './global/not-found/not-found.component';
 import { HomeComponent } from './home/home.component';
 import { ScheduleComponent } from './schedule/schedule.component';
+import { ForbiddenComponent } from './global/forbidden/forbidden.component';
 
 export const routes: Routes = [
      {path: '', component: HomeComponent},
@@ -11,7 +12,9 @@ export const routes: Routes = [
    {path: 'company', loadChildren: () => import('./company/routes').then(r => r.companyRoutes)},
    {path: 'product', loadChildren: () => import('./product/routes').then(r => r.productRoutes)},
    {path: 'schedule', loadChildren: () => import('./schedule/routes').then(r => r.scheduleRoutes)},
-   {path: 'server-error',component:ServerErrorComponent},
+   {path: 'server-error',component:ServerErrorComponent},  
+    {path: 'forbidden',component:ForbiddenComponent},
+
    {path: 'not-found',component:NotFoundComponent},
    {path:'home',component:HomeComponent},
    {path:'schedule',component:ScheduleComponent}

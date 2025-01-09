@@ -29,6 +29,8 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { NgxMaterialTimepickerTheme } from 'ngx-material-timepicker';
 import { FormValidationDirective } from '../../global/directives/form-validation.directive';
 import { TimeSpanService } from '../../global/services/timeSpanService';
+import { companyType } from '../../global/models/companyType';
+import { DayOfTheWeek } from '../../global/models/dayOfTheWeek';
 
 @Component({
   selector: 'app-create-company',
