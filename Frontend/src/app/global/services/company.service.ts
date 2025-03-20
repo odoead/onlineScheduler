@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -12,8 +12,8 @@ import { CompanyMin } from '../models/companyMin';
 })
 export class CompanyService {
  baseUrl= environment.companyUrl;
-  constructor(private http: HttpClient) { }
-
+  constructor() { }
+  private http = inject(HttpClient);
   public getCompany(Id: number,isPageLoad:boolean): Observable<Company> {
     const headers = isPageLoad ? HeadersService.getPageLoad() : undefined;
     return this.http.get<Company>(`${this.baseUrl}/api/company/${Id}`,{headers});

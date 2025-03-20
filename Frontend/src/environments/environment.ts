@@ -1,9 +1,9 @@
 export const environment = {
   production: false,
-  companyUrl: 'https://localhost:5047',
-  identityUrl: 'https://localhost:5001',
-  bookingUrl: 'https://localhost:5031',
-  notificationUrl: 'https://localhost:5234',
+  companyUrl: 'http://localhost:5047',
+  identityUrl: 'http://localhost:5001',
+  bookingUrl: 'http://localhost:5031',
+  notificationUrl: 'http://localhost:5234',
 
 
 };

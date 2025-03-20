@@ -1,0 +1,164 @@
+using c# i have microservice program. The  program have 2 microservices- identity and Company. Identity has data about the all of the users and uses IdentityDbContext , company has data about the company :
+
+public class Booking
+    {
+        [Key]
+        public int Id { get; set; }
+        public int BookingServiceId { get; set; }
+        [ForeignKey("WorkerId")]
+        public Worker Worker { get; set; }
+        public string WorkerId { get; set; }
+        [ForeignKey("ProductId")]
+        public Product Product { get; set; }
+        public int ProductId { get; set; }
+        public DateTime StartDateLOC { get; set; }
+        public DateTime EndDateLOC { get; set; }
+
+        [ForeignKey("ScheduleIntervalId")]
+        public ScheduleInterval ScheduleInterval { get; set; }
+        public int ScheduleIntervalId { get; set; }
+    }
+
+public abstract class Company
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public TimeSpan OpeningTimeLOC { get; set; }
+        public TimeSpan ClosingTimeLOC { get; set; }
+        [ForeignKey("OwnerId")]
+        public Worker Owner { get; set; }
+        public string OwnerId { get; set; }
+        public List<Product> Products { get; set; }
+        public Location Location { get; set; }
+        public TimeSpan TimeZoneFromUTCOffset { get; set; }
+        public List<ScheduleInterval> ScheduleIntervals { get; set; }
+        // [NotMapped]
+        //public CompanyType CompanyType { get; set; }
+        [Column("WorkingDaysSerialized")]
+        public string NotUseWorkingDaysSerialized { get; set; }
+        [NotMapped]
+        public List<DayOfTheWeek> WorkingDays
+        {
+            get
+            {
+                return string.IsNullOrEmpty(NotUseWorkingDaysSerialized) ?
+                    new List<DayOfTheWeek>() : NotUseWorkingDaysSerialized.Split(',').Select(int.Parse).Cast<DayOfTheWeek>().ToList();
+            }
+            set
+            {
+                NotUseWorkingDaysSerialized = value != null ? string.Join(",", value.Select(v => (int)v)) : string.Empty;
+            }
+        }
+    }
+
+public class Location
+    {
+        [Key]
+        public int Id { get; set; }
+        public NpgsqlPoint Coordinates { get; set; }
+
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
+        [Required]
+        public int CompanyId { get; set; }
+    }    public class SharedCompany : Company
+    {
+        public List<CompanyWorker> Workers { get; set; }
+    }
+
+    public class PersonalCompany : Company
+    {
+
+        [ForeignKey("WorkerId")]
+        public Worker Worker { get; set; }
+        public string WorkerId { get; set; }
+    }public class Location
+    {
+        [Key]
+        public int Id { get; set; }
+        public NpgsqlPoint Coordinates { get; set; }
+
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
+        [Required]
+        public int CompanyId { get; set; }
+    }
+
+public class Product
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public TimeSpan Duration { get; set; }
+
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
+        public int CompanyId { get; set; }
+        public List<ProductWorker> AssignedWorkers { get; set; }
+        public List<Booking> Bookings { get; set; }
+
+    }
+
+public class ScheduleInterval
+    {
+        [Key]
+        public int Id { get; set; }
+        public DayOfTheWeek WeekDay { get; set; }
+        public TimeSpan StartTimeLOC { get; set; }
+        public TimeSpan FinishTimeLOC { get; set; }
+        public IntervalType IntervalType { get; set; } = IntervalType.Work;
+
+        [ForeignKey("WorkerId")]
+        public Worker Worker { get; set; }
+        public string WorkerId { get; set; }
+
+        [ForeignKey("CompanyId")]
+        public Company Company { get; set; }
+        public int CompanyId { get; set; }
+        public List<Booking> Bookings { get; set; }
+    }
+
+    public enum IntervalType
+    {
+        Work,
+        Break
+    }
+
+public class Worker
+    {
+        [Key]
+        public string Id { get; set; }
+        public string IdentityServiceId { get; set; }
+        public string FullName { get; set; }
+        public Company OwnedCompany { get; set; }
+
+        public List<ScheduleInterval> ScheduleIntervals { get; set; }
+        public List<CompanyWorker> CompanyWorkAssignments { get; set; }
+        public List<ProductWorker> AssignedProducts { get; set; }
+        public List<Booking> Bookings { get; set; }
+    }
+
+    public class CompanyWorker
+    {
+        [ForeignKey("CompanyID")]
+        public SharedCompany Company { get; set; }
+        public int CompanyID { get; set; }
+
+        [ForeignKey("WorkerId")]
+        public Worker Worker { get; set; }
+        public string WorkerId { get; set; }
+    }
+
+    public class ProductWorker
+    {
+        [ForeignKey("WorkerId")]
+        public Worker Worker { get; set; }
+        public string WorkerId { get; set; }
+
+        [ForeignKey("ProductId")]
+        public Product Product { get; set; }
+        public int ProductId { get; set; }
+    }

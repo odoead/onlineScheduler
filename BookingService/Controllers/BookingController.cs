@@ -62,6 +62,13 @@ namespace BookingService.Controllers
 
             return Ok("99999999999999");
         }
+        [HttpGet("rabbit")/*,Route("rabbit")*/]
+        public async Task<IActionResult> testRabbit()
+        {
+            var data = await _bookingService.GetRabbitDataTest();
+            return Ok(data);
+        }
+
     }
 }
 

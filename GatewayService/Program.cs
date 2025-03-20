@@ -11,7 +11,7 @@ builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
         options.Authority = builder.Configuration["IdentityServiceUrl"];
-        options.Audience = "api";
+        options.Audience = "http://localhost:4200";
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -29,14 +29,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("customPolicy", b =>
     {
         b.AllowAnyHeader()
-            .AllowAnyMethod().AllowCredentials().WithOrigins(builder.Configuration["Client"]);
+            .AllowAnyMethod().AllowCredentials().WithOrigins(builder.Configuration["Client"], "http://localhost:80", "http://localhost:443", "http://localhost:3000");
     });
 });
 var app = builder.Build();
 
 app.ConfigureExceptionHandler();
 
-app.UseCors();
+app.UseCors("customPolicy");
 app.MapReverseProxy();
 app.UseAuthentication();
 app.UseAuthorization();

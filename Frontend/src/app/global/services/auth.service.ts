@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { Observable, of } from 'rxjs';
 
@@ -6,12 +7,12 @@ import { Observable, of } from 'rxjs';
   providedIn: 'root',
 })
 export class AuthService {
-  private userManager: UserManager;
+  private userManager!: UserManager;
   private user: User | null = null;
 
   constructor() {
-    this.userManager = new UserManager({
-      authority: 'https://localhost:5001',
+      this.userManager = new UserManager({
+      authority: 'http://localhost:5001',
       client_id: 'angular',
       redirect_uri: 'http://localhost:4200/signin-callback',
       post_logout_redirect_uri: 'http://localhost:4200/signout-callback-oidc',
@@ -23,7 +24,7 @@ export class AuthService {
 
     this.userManager.getUser().then((user) => {
       this.user = user;
-    });
+    }); 
   }
 
   login() {
@@ -34,7 +35,7 @@ export class AuthService {
     this.userManager.signoutRedirect();
   }
 
-  async handleCallback() {
+   async handleCallback() {
     this.user = await this.userManager.signinRedirectCallback();
   }
 

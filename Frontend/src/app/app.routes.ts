@@ -14,7 +14,7 @@ export const routes: Routes = [
    {path: 'schedule', loadChildren: () => import('./schedule/routes').then(r => r.scheduleRoutes)},
    {path: 'server-error',component:ServerErrorComponent},  
     {path: 'forbidden',component:ForbiddenComponent},
-
+    { path: 'signin-callback', component: HomeComponent },
    {path: 'not-found',component:NotFoundComponent},
    {path:'home',component:HomeComponent},
    {path:'schedule',component:ScheduleComponent}

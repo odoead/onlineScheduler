@@ -7,6 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { TimeSpan } from '../global/models/timespan';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { DayOfTheWeek } from '../global/models/dayOfTheWeek';
 
 
 @Component({

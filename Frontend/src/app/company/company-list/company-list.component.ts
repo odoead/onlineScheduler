@@ -3,11 +3,12 @@ import { CompanyMin } from '../../global/models/companyMin';
 import { CompanyService } from '../../global/services/company.service';
 import { Router } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-company-list',
   standalone: true,
-  imports: [MatListModule],
+  imports: [MatListModule,CommonModule],
   templateUrl: './company-list.component.html',
   styleUrl: './company-list.component.css',
 })

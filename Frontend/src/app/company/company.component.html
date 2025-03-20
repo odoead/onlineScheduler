@@ -1,9 +1,10 @@
-<mat-card>
+<div class="company-container">
+  <mat-card>
     <mat-card-header>
       <mat-card-title>{{ company.name }}</mat-card-title>
       <mat-card-subtitle>{{ company.companyType }} Company</mat-card-subtitle>
     </mat-card-header>
-    
+
     <mat-card-content>
       <div class="company-info">
         <p><strong>Description:</strong> {{ company.description }}</p>
@@ -11,34 +12,31 @@
         <p><strong>Closing Time:</strong> {{ company.closingTimeLOC }}</p>
         <p><strong>Owner:</strong> {{ company.ownerName }}</p>
 
-        <hr>
-        
+        <hr />
+
         <h3>Employees</h3>
 
         <mat-list>
           <mat-list-item *ngFor="let worker of company.Workers">
             <span matListItemTitle>{{ worker.Name }}</span>
-    
           </mat-list-item>
         </mat-list>
       </div>
     </mat-card-content>
-    
-    
-
 
     <mat-card-content>
-      
-        <h3>Products</h3>
+      <h3>Products</h3>
 
-        <mat-list>
-          <mat-list-item *ngFor="let product of company.Products">
+      <mat-list>
+        <mat-list-item *ngFor="let product of company.Products">
+          <div class="product-item">
             <span matListItemTitle>{{ product.Name }}</span>
-            <span matListItemTitle>{{ product.DurationTime  }}</span>
+            <span matListItemTitle>{{ product.DurationTime }}</span>
+          </div>
+          
+        </mat-list-item>
+      </mat-list>
 
-          </mat-list-item>
-        </mat-list>
     </mat-card-content>
-    
-    
-</mat-card>
+  </mat-card>
+</div>

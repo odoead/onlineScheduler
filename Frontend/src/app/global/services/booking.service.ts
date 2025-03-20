@@ -5,6 +5,7 @@ import { CreateBooking } from '../models/createBooking';
 import { Observable } from 'rxjs';
 import { HeadersService } from './headerService';
 import { GetBookings } from '../models/getBooking';
+import { BookingStatus } from '../models/bookingStatus';
 @Injectable({
   providedIn: 'root'
 })
@@ -23,13 +24,14 @@ export class BookingService {
     return this.http.get<GetBookings[]>(`${environment.companyUrl}/api/booking`,{headers})
   }
   
+  /*
   public editBooking(bookingId: number, workerId:string,BookingTimeLOC:Date): Observable<void> {
     const body = {
       UserEmails: userEmails,
     };
     const headers =  HeadersService.getPageLoad();
     return this.http.put<void>(`${this.baseUrl}/api/company/${companyId}/employees`, body,{headers});
-  }
+  }*/
 
   changeBookingStatus(id: number, newStatus: BookingStatus):Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/api/booking/status/${id}`, { newStatus });

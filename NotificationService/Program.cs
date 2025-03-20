@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using NotificationService.Consumers;
 using NotificationService.DB;
 using NotificationService.Interfaces;
+using Shared.Events.Booking;
 using Shared.Events.Company;
 using Shared.Events.User;
 using Shared.Exceptions;
@@ -24,6 +25,7 @@ builder.Services.AddMassTransit(x =>
     x.AddRequestClient<UserIdRequested>();
     x.AddRequestClient<UserEmailRequested>();
     x.AddRequestClient<NotificationAdditionalDataRequested>();
+    x.AddRequestClient<RabbitTestRequest>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -40,7 +42,7 @@ builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
         options.Authority = builder.Configuration["IdentityServiceUrl"];
-        options.Audience = "api";
+        options.Audience = "http://localhost:4200";
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {

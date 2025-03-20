@@ -1,4 +1,5 @@
-﻿using Duende.IdentityServer.Models;
+﻿using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using IdentityModel;
 using IdentityService.Models;
@@ -39,14 +40,15 @@ namespace IdentityService
             //Add company role claims
             var companyRoles = await _client.GetResponse<UserCompanyRolesRequestResult>(new UserCompanyRolesRequested { UserId = user.Id });
             claims.AddRange(companyRoles.Message.Roles.Select(role => new Claim("company_role", role.Key + "_" + role.Value)));
-            
+
             // Include the claims in the issued token
             context.IssuedClaims.AddRange(claims);
         }
 
         public async Task IsActiveAsync(IsActiveContext context)
         {
-            var user = await _userManager.GetUserAsync(context.Subject);
+            var sub = context.Subject.GetSubjectId();
+            var user = await _userManager.FindByIdAsync(sub);
             context.IsActive = user != null;
         }
     }

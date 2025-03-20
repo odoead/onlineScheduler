@@ -1,0 +1,19 @@
+.company-container
+{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+  .company-info {
+    display: flex;
+    margin-bottom: 16px;   
+     justify-content: space-between;
+     flex-direction: column;
+
+  }
+  .product-item {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+
+  }

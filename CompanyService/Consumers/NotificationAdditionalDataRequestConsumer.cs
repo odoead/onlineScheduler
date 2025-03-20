@@ -1,6 +1,5 @@
 ﻿using CompanyService.DB;
 using MassTransit;
-using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 using Shared.Events.Company;
 
@@ -18,7 +17,7 @@ namespace CompanyService.Consumers
             var mess = context.Message;
             Dictionary<string, string> dataPairs = new Dictionary<string, string>();
 
-            var product  = await dbcontext.Products.Include(q=>q.Company).FirstOrDefaultAsync(q => q.Id == mess.ProductId) ;
+            var product = await dbcontext.Products.Include(q => q.Company).FirstOrDefaultAsync(q => q.Id == mess.ProductId);
             dataPairs.Add("productname", product.Name);
 
             dataPairs.Add("companyid", product.Company.Id.ToString());

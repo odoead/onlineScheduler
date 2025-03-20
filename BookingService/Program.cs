@@ -29,6 +29,7 @@ builder.Services.AddMassTransit(x =>
     x.AddRequestClient<UserEmailRequested>();
     x.AddRequestClient<UserIdRequested>();
     x.AddRequestClient<BookingEditRequest>();
+    x.AddRequestClient<RabbitTestRequest>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -45,7 +46,7 @@ builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
         options.Authority = builder.Configuration["IdentityServiceUrl"];
-        options.Audience = "api";
+        options.Audience = "http://localhost:4200";
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {

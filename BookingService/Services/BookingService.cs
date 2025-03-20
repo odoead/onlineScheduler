@@ -17,10 +17,12 @@ namespace BookingService.Services
         IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
         IRequestClient<UserEmailRequested> UserEmailclient;
         IRequestClient<BookingEditRequest> BookingEditClient;
+        IRequestClient<RabbitTestRequest> RabbitTestClient;
 
         public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client,
             IRequestClient<BookingConfirmationRequested> client2, IRequestClient<UserEmailRequested> userEmailclient,
-            IRequestClient<BookingEditRequest> bookingEditClient)
+            IRequestClient<BookingEditRequest> bookingEditClient,
+            IRequestClient<RabbitTestRequest> test)
         {
             dbcontext = context;
             publishEndpoint = endpoint;
@@ -28,6 +30,7 @@ namespace BookingService.Services
             BookingConfirmationclient = client2;
             UserEmailclient = userEmailclient;
             BookingEditClient = bookingEditClient;
+            RabbitTestClient = test;
         }
 
         public async Task AddBookingAsync(DateTime BookingTimeLOC, string WorkerId, string ClientEmail, int ProductId, TimeSpan? Duration = null)
@@ -178,6 +181,15 @@ namespace BookingService.Services
                         break;
                 }
             }
+        }
+
+        public async Task<string> GetRabbitDataTest()
+        {
+            var response = await RabbitTestClient.GetResponse<RabbitTestRequestResult>(new RabbitTestRequest
+            {
+                 val="hi"
+            });
+            return response.Message.returnVal;
         }
     }
 }

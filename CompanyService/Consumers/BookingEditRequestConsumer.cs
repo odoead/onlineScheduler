@@ -1,6 +1,5 @@
 ﻿using CompanyService.DB;
 using CompanyService.Interfaces;
-using CompanyService.Services;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.Events.Booking;

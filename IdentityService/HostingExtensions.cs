@@ -1,4 +1,5 @@
 using Duende.IdentityServer.Services;
+using IdentityServerHost;
 using IdentityService.Consumers;
 using IdentityService.Data;
 using IdentityService.Models;
@@ -60,7 +61,8 @@ internal static class HostingExtensions
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryClients(Config.Clients)
             .AddAspNetIdentity<ApplicationUser>()
-            .AddProfileService<CustomProfileService>();
+            .AddProfileService<CustomProfileService>()
+            .AddTestUsers(TestUsers.Users);
 
         builder.Services.AddAuthentication();
         /*.AddGoogle(options =>
