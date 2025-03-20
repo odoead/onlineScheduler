@@ -7,7 +7,6 @@ import { ForbiddenComponent } from './global/forbidden/forbidden.component';
 
 export const routes: Routes = [
      {path: '', component: HomeComponent},
-   {path: '**', redirectTo: 'not-found', pathMatch: 'full'},
    {path: 'booking', loadChildren: () => import('./bookings/routes').then(r => r.bookingRoutes)},
    {path: 'company', loadChildren: () => import('./company/routes').then(r => r.companyRoutes)},
    {path: 'product', loadChildren: () => import('./product/routes').then(r => r.productRoutes)},
@@ -17,8 +16,11 @@ export const routes: Routes = [
     { path: 'signin-callback', component: HomeComponent },
    {path: 'not-found',component:NotFoundComponent},
    {path:'home',component:HomeComponent},
-   {path:'schedule',component:ScheduleComponent}
+   {path:'schedule',component:ScheduleComponent},
     
+
+   {path: '**', redirectTo: 'not-found', pathMatch: 'full'},
+
 ];
 /*
 

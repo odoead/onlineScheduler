@@ -11,7 +11,7 @@ export class AuthService {
   private user: User | null = null;
 
   constructor() {
-      this.userManager = new UserManager({
+    this.userManager = new UserManager({
       authority: 'http://localhost:5001',
       client_id: 'angular',
       redirect_uri: 'http://localhost:4200/signin-callback',
@@ -20,11 +20,23 @@ export class AuthService {
       scope: 'openid profile api roles',
       userStore: new WebStorageStateStore({ store: window.localStorage }),
       loadUserInfo: true,
+      silentRequestTimeoutInSeconds: 10000,
+      automaticSilentRenew: true,
+      includeIdTokenInSilentRenew: true,
+      silent_redirect_uri: 'http://localhost:4200/assets/silent-callback.html'
     });
 
     this.userManager.getUser().then((user) => {
       this.user = user;
-    }); 
+    });
+    
+    // Set up automatic token renewal
+    this.userManager.events.addAccessTokenExpiring(() => {
+      this.userManager.signinSilent().catch(error => {
+        console.error('Silent token renewal failed', error);
+        this.login();
+      });
+    });
   }
 
   login() {
@@ -35,15 +47,15 @@ export class AuthService {
     this.userManager.signoutRedirect();
   }
 
-   async handleCallback() {
+  async handleCallback() {
     this.user = await this.userManager.signinRedirectCallback();
   }
 
   isLoggedIn(): Observable<boolean> {
-    return of( this.user != null && !this.user.expired);
+    return of(this.user != null && !this.user.expired);
   }
 
-  isOwnerUser():  Observable<boolean>  {
+  isOwnerUser(): Observable<boolean> {
     if (this.isLoggedIn()) {
       const claims = this.user?.profile['company_role'];
       const roles = Array.isArray(claims) ? claims : [claims];
@@ -76,7 +88,7 @@ export class AuthService {
     const workerCompanyIds: number[] = [];
     if (this.isLoggedIn()) {
       const claims = this.user?.profile['company_role'];
-      const roles:string[] = Array.isArray(claims) ? claims : [claims];
+      const roles: string[] = Array.isArray(claims) ? claims : [claims];
       const workerRoles = roles.filter((role) => role.startsWith('worker_'));
 
       workerRoles?.forEach((role) => {

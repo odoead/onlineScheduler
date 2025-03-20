@@ -18,6 +18,15 @@ internal static class HostingExtensions
     {
         builder.Services.AddRazorPages();
 
+        /*builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("customPolicy", b =>
+            {
+                b.AllowAnyHeader()
+                    .AllowAnyMethod().AllowCredentials().WithOrigins(builder.Configuration["Client"], "http://localhost:80", "http://localhost:443", "http://localhost:3000");
+            });
+        });*/
+
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -40,8 +49,14 @@ internal static class HostingExtensions
 
         });
 
-        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequiredLength = 6;
+        }).AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
         builder.Services.AddTransient<IProfileService, CustomProfileService>();
@@ -58,11 +73,14 @@ internal static class HostingExtensions
                 options.EmitStaticAudienceClaim = true;
             })
             .AddInMemoryIdentityResources(Config.IdentityResources)
+            .AddInMemoryApiResources(Config.ApiResources())
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryClients(Config.Clients)
             .AddAspNetIdentity<ApplicationUser>()
             .AddProfileService<CustomProfileService>()
             .AddTestUsers(TestUsers.Users);
+
+
 
         builder.Services.AddAuthentication();
         /*.AddGoogle(options =>
@@ -93,6 +111,8 @@ internal static class HostingExtensions
 
         app.UseStaticFiles();
         app.UseRouting();
+
+       // app.UseCors("customPolicy");
         app.UseIdentityServer();
         app.UseAuthorization();
 

@@ -1,14 +1,17 @@
 // Copyright (c) Duende Software. All rights reserved.
 // See LICENSE in the project root for license information.
 
-using Duende.IdentityServer;
+using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Test;
-using Microsoft.AspNetCore.Authentication;
+using IdentityModel;
+using IdentityService.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 
 namespace IdentityServerHost.Pages.Create;
 
@@ -16,23 +19,28 @@ namespace IdentityServerHost.Pages.Create;
 [AllowAnonymous]
 public class Index : PageModel
 {
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly TestUserStore _users;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
+    private readonly IEventService _events;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
     public Index(
-        IIdentityServerInteractionService interaction,
-        TestUserStore? users = null)
+        UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IIdentityServerInteractionService interaction,
+            IEventService events)
     {
-        // this is where you would plug in your own custom identity management library (e.g. ASP.NET Identity)
-        _users = users ?? throw new InvalidOperationException("Please call 'AddTestUsers(TestUsers.Users)' on the IIdentityServerBuilder in Startup or remove the TestUserStore from the AccountController.");
-
+        _userManager = userManager;
+        _signInManager = signInManager;
         _interaction = interaction;
+        _events = events;
     }
 
-    public IActionResult OnGet(string? returnUrl)
+    public IActionResult OnGet(string returnUrl)
     {
         Input = new InputModel { ReturnUrl = returnUrl };
         return Page();
@@ -77,44 +85,44 @@ public class Index : PageModel
 
         if (ModelState.IsValid)
         {
-            var user = _users.CreateUser(Input.Username, Input.Password, Input.Name, Input.Email);
-
-            // issue authentication cookie with subject ID and username
-            var isuser = new IdentityServerUser(user.SubjectId)
+            var user = new ApplicationUser
             {
-                DisplayName = user.Username
+                UserName = Input.Username,
+                Email = Input.Email,
+                EmailConfirmed = true
             };
 
-            await HttpContext.SignInAsync(isuser);
-
-            if (context != null)
+            var result = await _userManager.CreateAsync(user, Input.Password);
+            if (result.Succeeded)
             {
-                if (context.IsNativeClient())
+                await _userManager.AddClaimsAsync(user, new Claim[]
                 {
-                    // The client is native, so this change in how to
-                    // return the response is for better UX for the end user.
-                    return this.LoadingPage(Input.ReturnUrl);
+                        new Claim(JwtClaimTypes.Name, Input.Username),
+                        new Claim(JwtClaimTypes.Email, Input.Email)
+                });
+
+                // Log the event
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
+
+                //auto signin   user
+                await _signInManager.SignInAsync(user, isPersistent: false);
+
+                if (Input.ReturnUrl != null)
+                {
+                    return Redirect(Input.ReturnUrl);
                 }
-
-                // we can trust Input.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                return Redirect(Input.ReturnUrl ?? "~/");
+                else
+                {
+                    return Redirect("~/");
+                }
             }
 
-            // request for a local page
-            if (Url.IsLocalUrl(Input.ReturnUrl))
+            foreach (var error in result.Errors)
             {
-                return Redirect(Input.ReturnUrl);
-            }
-            else if (string.IsNullOrEmpty(Input.ReturnUrl))
-            {
-                return Redirect("~/");
-            }
-            else
-            {
-                // user might have clicked on a malicious link - should be logged
-                throw new ArgumentException("invalid return URL");
+                ModelState.AddModelError(string.Empty, error.Description);
             }
         }
+
 
         return Page();
     }
