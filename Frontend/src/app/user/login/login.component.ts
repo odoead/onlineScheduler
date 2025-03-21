@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../global/services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -9,10 +10,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
 
-constructor(private authservice:AuthService) {}
-login() {
-  this.authservice.login();
-}
+  returnUrl: string;
+
+  constructor(
+    private authService: AuthService, 
+    private route: ActivatedRoute
+  ) {
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+  }
+
+  ngOnInit() {
+    this.authService.login();
+  }
 }

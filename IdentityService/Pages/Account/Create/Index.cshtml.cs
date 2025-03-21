@@ -83,7 +83,7 @@ public class Index : PageModel
             ModelState.AddModelError("Input.Username", "Invalid username");
         }
 
-        if (ModelState.IsValid)
+        if (ModelState.IsValid && string.Equals(Input.Password, Input.ConfirmPassword))
         {
             var user = new ApplicationUser
             {

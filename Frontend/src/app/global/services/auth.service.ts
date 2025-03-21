@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -9,6 +9,7 @@ import { Observable, of } from 'rxjs';
 export class AuthService {
   private userManager!: UserManager;
   private user: User | null = null;
+  private userSubject = new BehaviorSubject<User | null>(null);
 
   constructor() {
     this.userManager = new UserManager({
@@ -28,14 +29,21 @@ export class AuthService {
 
     this.userManager.getUser().then((user) => {
       this.user = user;
+      this.userSubject.next(user);
     });
-    
+
     // Set up automatic token renewal
     this.userManager.events.addAccessTokenExpiring(() => {
       this.userManager.signinSilent().catch(error => {
         console.error('Silent token renewal failed', error);
         this.login();
       });
+    });
+
+
+    this.userManager.events.addUserLoaded(user => {
+      this.user = user;
+      this.userSubject.next(user);
     });
   }
 
@@ -49,6 +57,7 @@ export class AuthService {
 
   async handleCallback() {
     this.user = await this.userManager.signinRedirectCallback();
+    return this.user;
   }
 
   isLoggedIn(): Observable<boolean> {
