@@ -1,6 +1,5 @@
 @page
 @model IdentityServerHost.Pages.Create.Index
-
 <!--Create account-->
 <div class="login-page">
     <div class="lead">
@@ -18,28 +17,33 @@
                 <div class="form-group">
                     <label asp-for="Input.Username"></label>
                     <input class="form-control" placeholder="Username" asp-for="Input.Username" autofocus>
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="Input.Password"></label>
                     <input type="password" class="form-control" placeholder="Password" asp-for="Input.Password" autocomplete="off">
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="Input.ConfirmPassword"></label>
                     <input type="password" class="form-control" placeholder="Confirm Password" asp-for="Input.ConfirmPassword" autocomplete="off">
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="Input.Name"></label>
                     <input type="text" class="form-control" placeholder="Name" asp-for="Input.Name">
+                    <span asp-validation-for="Input.Name" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="Input.Email"></label>
                     <input type="email" class="form-control" placeholder="Email" asp-for="Input.Email">
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
 
                 <button class="btn btn-primary" name="Input.Button" value="create">Create</button>
                 <button class="btn btn-secondary" name="Input.Button" value="cancel">Cancel</button>
             </form>
         </div>
-        
+
     </div>
 </div>

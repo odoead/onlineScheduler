@@ -20,7 +20,6 @@ namespace IdentityServerHost.Pages.Create;
 public class Index : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly TestUserStore _users;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
     private readonly IEventService _events;
@@ -30,9 +29,9 @@ public class Index : PageModel
 
     public Index(
         UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
-            IIdentityServerInteractionService interaction,
-            IEventService events)
+        SignInManager<ApplicationUser> signInManager,
+        IIdentityServerInteractionService interaction,
+        IEventService events)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -46,8 +45,10 @@ public class Index : PageModel
         return Page();
     }
 
-    public async Task<IActionResult> OnPost()
+    public async Task<IActionResult> OnPost(string returnUrl)
     {
+        Input = new InputModel { ReturnUrl = returnUrl };
+
         // check if we are in the context of an authorization request
         var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
 
@@ -78,9 +79,11 @@ public class Index : PageModel
             }
         }
 
-        if (_users.FindByUsername(Input.Username) != null)
+        // Check if username already exists
+        var existingUser = await _userManager.FindByNameAsync(Input.Username);
+        if (existingUser != null)
         {
-            ModelState.AddModelError("Input.Username", "Invalid username");
+            ModelState.AddModelError("Input.Username", "Username already exists");
         }
 
         if (ModelState.IsValid && string.Equals(Input.Password, Input.ConfirmPassword))
@@ -97,8 +100,8 @@ public class Index : PageModel
             {
                 await _userManager.AddClaimsAsync(user, new Claim[]
                 {
-                        new Claim(JwtClaimTypes.Name, Input.Username),
-                        new Claim(JwtClaimTypes.Email, Input.Email)
+                    new Claim(JwtClaimTypes.Name, Input.Username),
+                    new Claim(JwtClaimTypes.Email, Input.Email)
                 });
 
                 // Log the event

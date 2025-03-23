@@ -11,40 +11,42 @@ export class AuthService {
   private user: User | null = null;
   private userSubject = new BehaviorSubject<User | null>(null);
 
-  constructor() {
-    this.userManager = new UserManager({
-      authority: 'http://localhost:5001',
-      client_id: 'angular',
-      redirect_uri: 'http://localhost:4200/signin-callback',
-      post_logout_redirect_uri: 'http://localhost:4200/signout-callback-oidc',
-      response_type: 'code',
-      scope: 'openid profile api roles',
-      userStore: new WebStorageStateStore({ store: window.localStorage }),
-      loadUserInfo: true,
-      silentRequestTimeoutInSeconds: 10000,
-      automaticSilentRenew: true,
-      includeIdTokenInSilentRenew: true,
-      silent_redirect_uri: 'http://localhost:4200/assets/silent-callback.html'
-    });
-
-    this.userManager.getUser().then((user) => {
-      this.user = user;
-      this.userSubject.next(user);
-    });
-
-    // Set up automatic token renewal
-    this.userManager.events.addAccessTokenExpiring(() => {
-      this.userManager.signinSilent().catch(error => {
-        console.error('Silent token renewal failed', error);
-        this.login();
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {//window.localStorage not  available during server-side rendering
+    if (isPlatformBrowser(this.platformId)) {
+      this.userManager = new UserManager({
+        authority: 'http://localhost:5001',
+        client_id: 'angular',
+        redirect_uri: 'http://localhost:4200/signin-callback',
+        post_logout_redirect_uri: 'http://localhost:4200/signout-callback-oidc',
+        response_type: 'code',
+        scope: 'openid profile api roles',
+        userStore: new WebStorageStateStore({ store: window.localStorage }),
+        loadUserInfo: true,
+        silentRequestTimeoutInSeconds: 10000,
+        automaticSilentRenew: true,
+        includeIdTokenInSilentRenew: true,
+        silent_redirect_uri: 'http://localhost:4200/assets/silent-callback.html'
       });
-    });
+
+      this.userManager.getUser().then((user) => {
+        this.user = user;
+        this.userSubject.next(user);
+      });
+
+      // Set up automatic token renewal
+      this.userManager.events.addAccessTokenExpiring(() => {
+        this.userManager.signinSilent().catch(error => {
+          console.error('Silent token renewal failed', error);
+          this.login();
+        });
+      });
 
 
-    this.userManager.events.addUserLoaded(user => {
-      this.user = user;
-      this.userSubject.next(user);
-    });
+      this.userManager.events.addUserLoaded(user => {
+        this.user = user;
+        this.userSubject.next(user);
+      });
+    }
   }
 
   login() {
