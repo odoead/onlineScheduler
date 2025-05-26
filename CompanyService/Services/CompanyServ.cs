@@ -16,14 +16,14 @@ namespace CompanyService.Services
     public class CompanyServ : ICompanyService
     {
         private readonly Context dbcontext;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IPublishEndpoint publishEndpoint;
         private readonly IRequestClient<UserEmailRequested> _client;
         private readonly IBookingValidationService bookingValidator;
 
         public CompanyServ(Context context, IPublishEndpoint publishEndpoint, IRequestClient<UserEmailRequested> client, IBookingValidationService bookingValidator)
         {
             dbcontext = context;
-            _publishEndpoint = publishEndpoint;
+            this.publishEndpoint = publishEndpoint;
             _client = client;
             this.bookingValidator = bookingValidator;
         }

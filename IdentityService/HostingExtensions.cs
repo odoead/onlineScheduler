@@ -112,7 +112,7 @@ internal static class HostingExtensions
         app.UseStaticFiles();
         app.UseRouting();
 
-       // app.UseCors("customPolicy");
+        // app.UseCors("customPolicy");
         app.UseIdentityServer();
         app.UseAuthorization();
 

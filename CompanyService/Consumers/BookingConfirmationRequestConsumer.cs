@@ -21,9 +21,8 @@ namespace CompanyService.Consumers
         public async Task Consume(ConsumeContext<BookingConfirmationRequested> context)
         {
             var message = context.Message;
-            var companyId = await dbcontext.Companies.Where(company => company.Products.Any(p => p.Id == message.ProductId))
-                .Select(q => q.Id).FirstOrDefaultAsync();
-            var result = await validationService.IsValidBookingTime(message.StartDateLOC, message.EndDateLOC, companyId, message.WorkerId);
+            var companyId = await dbcontext.Companies.Where(company => company.Products.Any(p => p.Id == message.ProductId)).Select(q => q.Id).FirstOrDefaultAsync();
+            var result = await validationService.IsBookingTimeAvailableAsync(message.StartDateLOC, message.EndDateLOC, companyId, message.WorkerId);
 
             if (result)
             {

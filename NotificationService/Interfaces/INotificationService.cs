@@ -5,6 +5,10 @@ namespace NotificationService.Interfaces
 {
     public interface INotificationService
     {
-        public Task<PagedList<NotificationDTO>> GetNotifications(string workerEmail, int pageNumber, int pageSize);
+        Task<PagedList<NotificationDTO>> GetNotifications(string workerEmail, int pageNumber, int pageSize);
+        Task StartDelivery(int notificationId);
+        Task MarkAsRead(int notificationId);
+        Task ProcessScheduledNotifications();
+        Task SendUpcomingAppointmentReminders();
     }
 }

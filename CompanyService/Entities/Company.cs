@@ -12,6 +12,7 @@ namespace CompanyService.Entities
         public string Description { get; set; }
         public TimeSpan OpeningTimeLOC { get; set; }
         public TimeSpan ClosingTimeLOC { get; set; }
+        public CompanySettings Settings { get; set; }
         [ForeignKey("OwnerId")]
         public Worker Owner { get; set; }
         public string OwnerId { get; set; }

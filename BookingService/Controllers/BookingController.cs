@@ -9,11 +9,11 @@ namespace BookingService.Controllers
     [ApiController]
     public class BookingController : Controller
     {
-        private readonly E.IBookingService _bookingService;
+        private readonly E.IBookingService bookingService;
 
         public BookingController(E.IBookingService bookingService)
         {
-            _bookingService = bookingService;
+            this.bookingService = bookingService;
         }
 
         [HttpPost]
@@ -26,7 +26,7 @@ namespace BookingService.Controllers
                 return Unauthorized();
             }
 
-            await _bookingService.AddBookingAsync(
+            await bookingService.AddBookingAsync(
                 addBookingDTO.BookingTimeLOC,
                 addBookingDTO.WorkerId,
                 emailClaim,
@@ -40,7 +40,7 @@ namespace BookingService.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> EditBooking(int id, [FromBody] EditBookingDTO editBookingDTO)
         {
-            await _bookingService.EditBookingAsync(
+            await bookingService.EditBookingAsync(
                 id,
                 editBookingDTO.BookingTimeLOC,
                 editBookingDTO.WorkerId
@@ -52,7 +52,7 @@ namespace BookingService.Controllers
         [HttpPatch("status/{id}")]
         public async Task<IActionResult> ChangeBookingStatus(int id, [FromBody] int newStatus)
         {
-            await _bookingService.ChangeBookingStatusAsync(id, newStatus);
+            await bookingService.ChangeBookingStatusAsync(id, newStatus);
             return Ok();
         }
 
@@ -65,7 +65,7 @@ namespace BookingService.Controllers
         [HttpGet("rabbit")/*,Route("rabbit")*/]
         public async Task<IActionResult> testRabbit()
         {
-            var data = await _bookingService.GetRabbitDataTest();
+            var data = await bookingService.GetRabbitDataTest();
             return Ok(data);
         }
 

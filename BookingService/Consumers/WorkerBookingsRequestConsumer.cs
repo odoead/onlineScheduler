@@ -22,22 +22,22 @@ namespace BookingService.Consumers
             var message = context.Message;
 
             var bookings = await dbcontext.Bookings.Where(q => q.WorkerId == message.workerId && q.Service == Entities.ServiceType.SCHEDULE)
-                .OrderBy(q => q.StartDateLOC).ToListAsync();
+                .OrderBy(q => q.StartDateUTC).ToListAsync();
 
-            var workerBookings = new List<WorkerBooking>();
+            var workerBookings = new List<WorkerBooking_ScheduleService>();
 
             foreach (var booking in bookings)
             {
                 var userData = await GetUserData(booking.ClientId);
-                var workerBooking = new WorkerBooking
+                var workerBooking = new WorkerBooking_ScheduleService
                 {
-                    EndDateLOC = booking.EndDateLOC.Value,
+                    EndDateLOC = booking.EndDateUTC.Value,
                     ProductId = booking.ProductId,
                     Status = booking.Status.ToString(),
-                    StartDateLOC = booking.StartDateLOC,
+                    StartDateLOC = booking.StartDateUTC,
                     CustomerEmail = userData.Email,
                     CustomerName = userData.UserName,
-                    Id = booking.Id,
+                    BookingId = booking.Id,
                 };
                 workerBookings.Add(workerBooking);
             }

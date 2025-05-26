@@ -75,8 +75,8 @@ public class Index : PageModel
         {
             if (context != null)
             {
-                
-                 
+
+
 
                 // if the user cancels, send a result back into IdentityServer as if they 
                 // denied the consent (even if this client does not require consent).
@@ -118,7 +118,8 @@ public class Index : PageModel
                 {
                     props.IsPersistent = true;
                     props.ExpiresUtc = DateTimeOffset.UtcNow.Add(LoginOptions.RememberMeLoginDuration);
-                };
+                }
+                ;
 
                 // issue authentication cookie with subject ID and username
                 var isuser = new IdentityServerUser(user.Id)
@@ -130,7 +131,7 @@ public class Index : PageModel
 
                 if (context != null)
                 {
-                     
+
 
                     if (context.IsNativeClient())
                     {

@@ -2,7 +2,7 @@
 
 namespace CompanyService.DTO.Booking
 {
-    public class GetBookingDTO
+    public class GetBookingDTO_Worker
     {
         public int Id { get; set; }
         public ProductMinDTO Product { get; set; }

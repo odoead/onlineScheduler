@@ -11,13 +11,14 @@ namespace BookingService.Entities
         public string ClientId { get; set; }
         public int ProductId { get; set; }
         public BookingStatus Status { get; set; } = BookingStatus.CREATED;
-        public DateTime StartDateLOC { get; set; }
-        public DateTime? EndDateLOC { get; set; }
+        public DateTime StartDateUTC { get; set; }
+        public DateTime? EndDateUTC { get; set; }
         public ServiceType Service { get; set; }
 
     }
-    public enum ServiceType
+    public enum ServiceType//например возможность иметь обработку нескольких сервисов 
     {
         SCHEDULE
+        //, delivery
     }
 }

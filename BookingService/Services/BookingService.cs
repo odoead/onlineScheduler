@@ -4,6 +4,7 @@ using BookingService.Interfaces;
 using MassTransit;
 using Shared.Data;
 using Shared.Events.Booking;
+using Shared.Events.Company;
 using Shared.Events.User;
 using Shared.Exceptions.custom_exceptions;
 
@@ -13,16 +14,17 @@ namespace BookingService.Services
     {
         private readonly Context dbcontext;
         private readonly IPublishEndpoint publishEndpoint;
-        IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// check if booking can be created
-        IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
-        IRequestClient<UserEmailRequested> UserEmailclient;
-        IRequestClient<BookingEditRequest> BookingEditClient;
-        IRequestClient<RabbitTestRequest> RabbitTestClient;
+        private readonly IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// check if booking can be created
+        private readonly IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
+        private readonly IRequestClient<UserEmailRequested> UserEmailclient;
+        private readonly IRequestClient<BookingEditRequest> BookingEditClient;
+        private readonly IRequestClient<RabbitTestRequest> RabbitTestClient;
+        private readonly IRequestClient<GetCompanyTimeZoneRequest> companyTimeZoneClient;
 
         public BookingService(Context context, IPublishEndpoint endpoint, IRequestClient<IsValidBookingTimeRequested> client,
             IRequestClient<BookingConfirmationRequested> client2, IRequestClient<UserEmailRequested> userEmailclient,
             IRequestClient<BookingEditRequest> bookingEditClient,
-            IRequestClient<RabbitTestRequest> test)
+            IRequestClient<RabbitTestRequest> test, IRequestClient<GetCompanyTimeZoneRequest> timezoneClient)
         {
             dbcontext = context;
             publishEndpoint = endpoint;
@@ -31,7 +33,9 @@ namespace BookingService.Services
             UserEmailclient = userEmailclient;
             BookingEditClient = bookingEditClient;
             RabbitTestClient = test;
+            companyTimeZoneClient = timezoneClient;
         }
+
 
         public async Task AddBookingAsync(DateTime BookingTimeLOC, string WorkerId, string ClientEmail, int ProductId, TimeSpan? Duration = null)
         {
@@ -48,14 +52,19 @@ namespace BookingService.Services
                 default:
                     throw new InvalidOperationException("Unknown response type received.");
             }
+
+            var tzInfo = await companyTimeZoneClient.GetResponse<GetCompanyTimeZoneResult>(new GetCompanyTimeZoneRequest { ProductId = ProductId });
+            var StartDateUTC = TimeZoneInfo.ConvertTimeToUtc(BookingTimeLOC, tzInfo.Message.TimeZone);
+
             var booking = new Booking
             {
                 ClientId = clientId,
                 WorkerId = WorkerId,
                 ProductId = ProductId,
                 Status = BookingStatus.CREATED,
-
-                StartDateLOC = BookingTimeLOC,
+                EndDateUTC = StartDateUTC + Duration,
+                StartDateUTC = StartDateUTC,
+                Service = ServiceType.SCHEDULE,
 
             };
             if (Duration != null)
@@ -71,7 +80,7 @@ namespace BookingService.Services
                 {
                     throw new BadRequestException("The booking overlaps with an existing booking.");
                 }
-                booking.EndDateLOC = BookingTimeLOC.Add(Duration.Value);
+                booking.EndDateUTC = StartDateUTC.Add(Duration.Value);
             }
 
             dbcontext.Bookings.Add(booking);
@@ -79,12 +88,14 @@ namespace BookingService.Services
 
             await publishEndpoint.Publish(new BookingCreated
             {
-                WorkerId = WorkerId,
+                BookingsWorkerId = WorkerId,
                 BookingId = booking.Id,
-                ClientId = clientId,
-                EndDateLOC = booking.EndDateLOC,
-                StartDateLOC = booking.StartDateLOC,
-                ProductId = ProductId,
+                BookingsClientId = clientId,
+                BookingEndDateLOC = BookingTimeLOC + Duration,
+                BookingStartDateLOC = BookingTimeLOC,
+                BookingProductId = ProductId,
+                BookingStartDateUTC = StartDateUTC,
+                BookingEndDateUTC = booking.EndDateUTC,
             });
         }
 
@@ -97,30 +108,39 @@ namespace BookingService.Services
                 throw new BadRequestException("Only Created bookings can be edited.");
             }
 
-            if (booking.EndDateLOC != null)
+            var tzInfo = await companyTimeZoneClient.GetResponse<GetCompanyTimeZoneResult>(new GetCompanyTimeZoneRequest { ProductId = booking.ProductId });
+            var StartDateUTC = TimeZoneInfo.ConvertTimeToUtc(BookingTimeLOC, tzInfo.Message.TimeZone);
+
+            var duration = booking.EndDateUTC - booking.StartDateUTC;//calculate duration based on start-end diff
+            var response = await BookingEditClient.GetResponse<BookingEditRequestResult>(new BookingEditRequest
             {
-                var duration = booking.EndDateLOC - booking.StartDateLOC;//calculate duration based on start-end diff
-                var response = await BookingEditClient.GetResponse<BookingEditRequestResult>(new BookingEditRequest
-                {
-                    StartDateLOC = BookingTimeLOC,
-                    EndDateLOC = BookingTimeLOC.Add(duration.Value),
-                    WorkerId = WorkerId,
-                    ProductId = booking.ProductId,
-                    BookingId = booking.Id,
-                });
-                if (response.Message.IsEdited == false)
-                {
-                    throw new BadRequestException("Booking edit error. Id: " + booking.Id);
-                }
-                booking.EndDateLOC = BookingTimeLOC.Add(duration.Value);
-
+                StartDateLOC = BookingTimeLOC,
+                EndDateLOC = BookingTimeLOC.Add(duration.Value),
+                WorkerId = WorkerId,
+                ProductId = booking.ProductId,
+                BookingId = booking.Id,
+            });
+            if (response.Message.IsEdited == false)
+            {
+                throw new BadRequestException("Booking edit error. Id: " + booking.Id);
             }
-
+            booking.EndDateUTC = StartDateUTC.Add(duration.Value);
             booking.WorkerId = WorkerId;
-            booking.StartDateLOC = BookingTimeLOC;
+            booking.StartDateUTC = StartDateUTC;
 
             await dbcontext.SaveChangesAsync();
+            await publishEndpoint.Publish<BookingEditCreatedRequest>(new BookingEditCreatedRequest
+            {
 
+                BookingId = booking.Id,
+                WorkerId = booking.WorkerId,
+                ProductId = booking.ProductId,
+                StartDateLOC = BookingTimeLOC,
+                EndDateLOC = BookingTimeLOC + duration.Value,
+                StartDateUTC = StartDateUTC,
+                EndDateUTC = StartDateUTC + duration.Value,
+
+            });
         }
 
         public async Task ChangeBookingStatusAsync(int bookingId, int newStatus)
@@ -131,12 +151,16 @@ namespace BookingService.Services
                 throw new BadRequestException("This status doesnt exist ");
             }
 
-            if ((BookingStatus)booking.Status != BookingStatus.CREATED)
+            if ((BookingStatus)booking.Status == BookingStatus.CONFIRMED)
             {
                 throw new BadRequestException("You can only change the booking status of unconfirmed orders ");
             }
 
-            if (booking.EndDateLOC != null)
+            var tzInfo = await companyTimeZoneClient.GetResponse<GetCompanyTimeZoneResult>(new GetCompanyTimeZoneRequest { ProductId = booking.ProductId });
+            var StartDateLOC = TimeZoneInfo.ConvertTimeFromUtc(booking.StartDateUTC, tzInfo.Message.TimeZone);
+            DateTime EndDateLOC = TimeZoneInfo.ConvertTimeFromUtc((DateTime)booking.EndDateUTC, tzInfo.Message.TimeZone);
+
+            if (booking.EndDateUTC != null)
             {
                 switch ((BookingStatus)newStatus)
                 {
@@ -149,8 +173,10 @@ namespace BookingService.Services
                             WorkerId = booking.WorkerId,
                             ProductId = booking.ProductId,
                             OriginalStatus = booking.Status,
-                            EndDateLOC = booking.EndDateLOC,
-                            StartDateLOC = booking.StartDateLOC
+                            EndDateLOC = EndDateLOC,
+                            StartDateLOC = StartDateLOC,
+                            StartDateUTC = booking.StartDateUTC,
+                            EndDateUTC = booking.EndDateUTC,
                         });
                         break;
 
@@ -161,8 +187,8 @@ namespace BookingService.Services
                             BookingId = booking.Id,
                             WorkerId = booking.WorkerId,
                             ProductId = booking.ProductId,
-                            StartDateLOC = booking.StartDateLOC,
-                            EndDateLOC = booking.EndDateLOC.Value,
+                            StartDateLOC = StartDateLOC,
+                            EndDateLOC = EndDateLOC,
                         });
 
                         if (!confirmationResponse.Message.IsRegistered)
@@ -172,11 +198,13 @@ namespace BookingService.Services
                         await dbcontext.SaveChangesAsync();
                         await publishEndpoint.Publish(new BookingConfirmed
                         {
+
                             BookingId = booking.Id,
                             WorkerId = booking.WorkerId,
                             ProductId = booking.ProductId,
-                            StartDateLOC = booking.StartDateLOC,
-                            EndDateLOC = booking.EndDateLOC
+                            BookingStartDateLOC = StartDateLOC,
+                            BookingEndDateLOC = EndDateLOC,
+                            BookingStartDateUTC = booking.StartDateUTC,
                         });
                         break;
                 }
@@ -187,9 +215,45 @@ namespace BookingService.Services
         {
             var response = await RabbitTestClient.GetResponse<RabbitTestRequestResult>(new RabbitTestRequest
             {
-                 val="hi"
+                val = "hi"
             });
             return response.Message.returnVal;
+        }
+
+        public async Task CancelBookingAsync(int bookingId)
+        {
+            var booking = await dbcontext.Bookings.FindAsync(bookingId)
+                          ?? throw new NotFoundException("Invalid booking ID " + bookingId);
+
+            //allow cancellation for bookings with created status 
+            if (booking.Status != BookingStatus.CREATED)
+            {
+                throw new BadRequestException("Only bookings with status CREATED can be canceled. Booking ID: " + bookingId);
+            }
+
+            var tzInfo = await companyTimeZoneClient.GetResponse<GetCompanyTimeZoneResult>(new GetCompanyTimeZoneRequest { ProductId = booking.ProductId });
+            var StartDateLOC = TimeZoneInfo.ConvertTimeFromUtc(booking.StartDateUTC, tzInfo.Message.TimeZone);
+            DateTime EndDateLOC = TimeZoneInfo.ConvertTimeFromUtc((DateTime)booking.EndDateUTC, tzInfo.Message.TimeZone);
+
+            booking.Status = BookingStatus.CANCELED;
+
+            await dbcontext.SaveChangesAsync();
+
+            await publishEndpoint.Publish(new BookingCanceled
+            {
+
+
+                BookingId = booking.Id,
+                StartDateUTC = booking.StartDateUTC,
+                WorkerId = booking.WorkerId,
+                ProductId = booking.ProductId,
+                OriginalStatus = BookingStatus.CREATED,
+                StartDateLOC = StartDateLOC,
+                EndDateLOC = EndDateLOC,
+                EndDateUTC = booking.EndDateUTC,
+
+
+            });
         }
     }
 }

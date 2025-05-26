@@ -3,7 +3,6 @@ using CompanyService.Entities;
 using CompanyService.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data;
-using Shared.Exceptions.custom_exceptions;
 
 namespace CompanyService.Services
 {
@@ -24,6 +23,13 @@ namespace CompanyService.Services
                 .Where(b => b.WorkerId == workerId)
                 .Include(b => b.Product).ThenInclude(p => p.Company)
                 .AnyAsync(b => IsBookingActive(b, currentDateTime));
+
+
+
+
+
+
+
         }
 
         public async Task<bool> HasActiveBookingsCompany(int companyId)
@@ -57,7 +63,7 @@ namespace CompanyService.Services
                 .AnyAsync(b => IsBookingActive(b, currentDateTime));
         }
 
-        public async Task<bool> IsValidBookingTime(DateTime startDateLoc, DateTime endDateLoc, int companyId, string workerId)
+        public async Task<bool> IsBookingTimeAvailableAsync(DateTime startDateLoc, DateTime endDateLoc, int companyId, string workerId)
         {
             if (startDateLoc >= endDateLoc)
             {
@@ -68,7 +74,8 @@ namespace CompanyService.Services
             var company = await dbcontext.Companies.FirstOrDefaultAsync(c => c.Id == companyId);
             if (company == null)
             {
-                throw new BadRequestException($"Company not found with ID: {companyId}");
+                return false;
+                //throw new BadRequestException($"Company not found with ID: {companyId}");
             }
 
             var currentTimeInCompanyTz = DateTime.UtcNow.Add(company.TimeZoneFromUTCOffset);
@@ -79,9 +86,9 @@ namespace CompanyService.Services
                 //throw new BadRequestException("Booking end time must be in the future");
             }
 
-            // Check if the booking day is within company working days
-            var bookingDayOfWeek = (int)startDateLoc.DayOfWeek;
-            if (!company.WorkingDays.Contains((DayOfTheWeek)bookingDayOfWeek))
+            //check if the booking day is within company working isWithinScheduledays
+            var bookingDayOfWeek = (DayOfTheWeek)(((int)startDateLoc.DayOfWeek + 6) % 7 + 1);
+            if (!company.WorkingDays.Contains(bookingDayOfWeek))
             {
                 return false;
                 //throw new BadRequestException("Booking time is outside of company working days");
@@ -89,11 +96,7 @@ namespace CompanyService.Services
 
             //Check if Worker has schedule intervals during the booking time
             //and interval has free time with no bookings at start and end time
-            var scheduleIntervals = await dbcontext.ScheduleIntervals
-                .Where(si => si.CompanyId == companyId &&
-                    si.WorkerId == workerId &&
-                    si.WeekDay == (DayOfTheWeek)bookingDayOfWeek &&
-                    si.IntervalType == IntervalType.WORK)
+            var scheduleIntervals = await dbcontext.ScheduleIntervals.Where(si => si.CompanyId == companyId && si.WorkerId == workerId && si.WeekDay == bookingDayOfWeek && si.IntervalType == IntervalType.WORK)
                 .ToListAsync();
             if (!scheduleIntervals.Any())
             {

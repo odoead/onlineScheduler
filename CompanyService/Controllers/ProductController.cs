@@ -60,5 +60,28 @@ namespace CompanyService.Controllers
             await productService.DeleteProductAsync(id);
             return NoContent();
         }
+        [HttpPost("{productId}/workers/{workerId}")]
+        [Authorize]
+        public async Task<IActionResult> AssignWorkerToService(int productId, string workerId)
+        {
+            var result = await productService.AssignWorkerToServiceAsync(productId, workerId);
+            return Ok(result);
+        }
+
+        [HttpDelete("{productId}/workers/{workerId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveWorkerFromService(int productId, string workerId)
+        {
+            var result = await productService.RemoveWorkerFromServiceAsync(productId, workerId);
+            return Ok(result);
+        }
+
+        [HttpGet("company/{companyId}")]
+        [Authorize]
+        public async Task<IActionResult> GetAllProductsByCompany(int companyId)
+        {
+            var products = await productService.GetAllProductsByCompanyAsync(companyId);
+            return Ok(products);
+        }
     }
 }

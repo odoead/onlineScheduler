@@ -22,7 +22,10 @@ namespace CompanyService.Consumers
         {
             var message = context.Message;
             var companyId = await dbcontext.Companies.Where(company => company.Products.Any(p => p.Id == message.ProductId)).Select(q => q.Id).FirstOrDefaultAsync();
-            var result = new IsValidBookingTimeRequestResult { IsValid = await validationService.IsValidBookingTime(message.StartDateLOC, message.EndDateLOC, companyId, message.WorkerId) };
+            var result = new IsValidBookingTimeRequestResult
+            {
+                IsValid = await validationService.IsBookingTimeAvailableAsync(message.StartDateLOC, message.EndDateLOC, companyId, message.WorkerId)
+            };
             await context.RespondAsync<IsValidBookingTimeRequestResult>(result);
 
         }

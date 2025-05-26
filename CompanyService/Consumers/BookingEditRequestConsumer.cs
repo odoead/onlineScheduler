@@ -1,4 +1,5 @@
 ﻿using CompanyService.DB;
+using CompanyService.Helpers;
 using CompanyService.Interfaces;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,7 @@ namespace CompanyService.Consumers
                 }
             }
 
-            if (!await validationService.IsValidBookingTime(
+            if (!await validationService.IsBookingTimeAvailableAsync(
                     message.StartDateLOC,
                     newEndDateLOC,
                     booking.Product.CompanyId,
@@ -63,10 +64,26 @@ namespace CompanyService.Consumers
             booking.WorkerId = message.WorkerId;
             booking.ProductId = message.ProductId;
 
+
+
+            // Get the company's location for timezone conversion
+            var company = await dbcontext.Companies.Include(c => c.Location).FirstOrDefaultAsync(c => c.Id == booking.Product.CompanyId)
+                ?? throw new NotFoundException("Company not found");
+
+            double latitude = company.Location.Coordinates.Y;
+            double longitude = company.Location.Coordinates.X;
+
+            var startTimeUTC = GetUTCTimeByLocation(message.StartDateLOC, latitude, longitude);
+
             dbcontext.Bookings.Update(booking);
             await dbcontext.SaveChangesAsync();
 
-            await context.RespondAsync<BookingEditRequestResult>(new BookingEditRequestResult { IsEdited = true });
+            await context.RespondAsync<BookingEditRequestResult>(new BookingEditRequestResult { IsEdited = true, StartDateUTC = startTimeUTC });
+        }
+        private DateTime GetUTCTimeByLocation(DateTime startDateLOC, double latitude, double longitude)
+        {
+            var tzInfo = TimezoneConverter.GetTimezoneFromLocation(longitude, latitude);
+            return TimeZoneInfo.ConvertTimeToUtc(startDateLOC, tzInfo);
         }
     }
 }

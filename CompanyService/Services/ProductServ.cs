@@ -110,5 +110,66 @@ namespace CompanyService.Services
                  ProductId = product.Id
              });*/
         }
+
+        public async Task<bool> AssignWorkerToServiceAsync(int productId, string workerId)
+        {
+            var product = await dbcontext.Products.Include(p => p.AssignedWorkers).FirstOrDefaultAsync(p => p.Id == productId) ??
+                throw new NotFoundException("Product not found with id " + productId);
+
+            var worker = await dbcontext.Workers.FirstOrDefaultAsync(w => w.Id == workerId) ??
+                throw new NotFoundException("Worker not found with id " + workerId);
+
+            if (product.AssignedWorkers.Any(pw => pw.WorkerId == workerId))
+            {
+                return false;
+            }
+
+            product.AssignedWorkers.Add(new ProductWorker
+            {
+                ProductId = productId,
+                WorkerId = workerId
+            });
+
+            await dbcontext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RemoveWorkerFromServiceAsync(int productId, string workerId)
+        {
+            var productWorker = await dbcontext.ProductWorkers.FirstOrDefaultAsync(pw => pw.ProductId == productId && pw.WorkerId == workerId);
+            if (productWorker == null)
+                return false;
+
+            var hasAnyActiveBookings = await dbcontext.Bookings.AnyAsync(b => b.ProductId == productId && b.WorkerId == workerId && b.EndDateLOC > DateTime.UtcNow);
+
+            if (hasAnyActiveBookings)
+                throw new BadRequestException("Cannot remove worker from product with active bookings");
+
+            dbcontext.ProductWorkers.Remove(productWorker);
+            await dbcontext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<GetProductAndWorkersDTO>> GetAllProductsByCompanyAsync(int companyId)
+        {
+            var company = await dbcontext.Companies.FirstOrDefaultAsync(c => c.Id == companyId) ??
+                throw new NotFoundException("Company not found with id " + companyId);
+
+            var products = await dbcontext.Products.Include(p => p.Company).Include(p => p.AssignedWorkers).ThenInclude(pw => pw.Worker)
+                .Where(p => p.CompanyId == companyId).Select(p => new GetProductAndWorkersDTO
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Duration = p.Duration,
+                    Company = new CompanyMinDTO { Id = p.CompanyId, Name = p.Company.Name },
+                    Workers = p.AssignedWorkers.Select(pw => new WorkerMinDTO
+                    {
+                        Id = pw.WorkerId,
+                        Name = pw.Worker.FullName,
+                    }).ToList(),
+                }).ToListAsync();
+
+            return products;
+        }
     }
 }

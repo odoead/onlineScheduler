@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using IdentityModel;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -5,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using NotificationService.Consumers;
 using NotificationService.DB;
 using NotificationService.Interfaces;
-using Shared.Events.Booking;
 using Shared.Events.Company;
 using Shared.Events.User;
 using Shared.Exceptions;
@@ -18,6 +19,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<Context>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<INotificationService, E.NotificationService>();
+
+builder.Services.AddHangfire(config => config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+.UseSimpleAssemblyNameTypeSerializer()
+.UseRecommendedSerializerSettings()
+.UsePostgreSqlStorage(builder.Configuration
+.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHangfireServer();
+
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumersFromNamespaceContaining<BookingCreatedConsumer>();
@@ -25,7 +35,7 @@ builder.Services.AddMassTransit(x =>
     x.AddRequestClient<UserIdRequested>();
     x.AddRequestClient<UserEmailRequested>();
     x.AddRequestClient<NotificationAdditionalDataRequested>();
-    x.AddRequestClient<RabbitTestRequest>();
+
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -58,10 +68,10 @@ builder.Services.AddAuthentication("Bearer")
 var app = builder.Build();
 
 app.ConfigureExceptionHandler();
+app.UseHangfireDashboard("/hangfire");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();

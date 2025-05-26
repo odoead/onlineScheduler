@@ -12,7 +12,8 @@ namespace NotificationService.DB
         }
 
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<Data> NotifcationData { get; set; }
+        public DbSet<KVData> NotifcationData { get; set; }
+        public DbSet<ScheduledNotification> ScheduledNotifications { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

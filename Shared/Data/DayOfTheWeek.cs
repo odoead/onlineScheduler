@@ -10,4 +10,11 @@
         Saturday = 6,
         Sunday = 7
     }
+    public static class DayOfTheWeekExtensions
+    {
+        public static DayOfTheWeek ToCustomDayOfWeek(this DateTime dateTime)
+        {
+            return (DayOfTheWeek)(((int)dateTime.DayOfWeek + 6) % 7 + 1);
+        }
+    }
 }

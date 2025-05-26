@@ -203,7 +203,7 @@ public class Index : PageModel
             Description = apiScope.Description,
             Emphasize = apiScope.Emphasize,
             Required = apiScope.Required,
-            Checked = check || apiScope.Required
+            Checked = check || apiScope.Required,
         };
     }
 

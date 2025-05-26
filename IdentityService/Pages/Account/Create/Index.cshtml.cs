@@ -4,7 +4,6 @@
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
-using Duende.IdentityServer.Test;
 using IdentityModel;
 using IdentityService.Models;
 using Microsoft.AspNetCore.Authorization;

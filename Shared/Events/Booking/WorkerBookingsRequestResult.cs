@@ -2,12 +2,12 @@
 {
     public class WorkerBookingsRequestResult
     {
-        public List<WorkerBooking> Bookings { get; set; }
+        public List<WorkerBooking_ScheduleService> Bookings { get; set; }
 
     }
-    public class WorkerBooking
+    public class WorkerBooking_ScheduleService
     {
-        public int Id { get; set; }
+        public int BookingId { get; set; }
         public int ProductId { get; set; }
         public DateTime StartDateLOC { get; set; }
         public DateTime EndDateLOC { get; set; }

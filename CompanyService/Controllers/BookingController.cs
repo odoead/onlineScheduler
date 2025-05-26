@@ -25,10 +25,40 @@ namespace CompanyService.Controllers
                 return Unauthorized();
             }
 
-            var bookings = await bookingService.GetBookingsAsync(emailClaim);
+            var bookings = await bookingService.GetWorkerBookingsAsync(emailClaim);
 
             return Ok(bookings);
 
+        }
+        [HttpGet("client")]
+        [Authorize]
+        public async Task<IActionResult> GetClientBookings()
+        {
+            var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            var bookings = await bookingService.GetClientBookingsAsync(emailClaim);
+            return Ok(bookings);
+        }
+
+        [HttpGet("company/{companyId}/statistics")]
+        [Authorize]
+        public async Task<IActionResult> GetCompanyBookingsStatistics(int companyId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            // Verify the user has permission to access this company's statistics
+            var emailClaim = User?.FindFirst(ClaimTypes.Email)?.Value;
+            if (emailClaim == null)
+            {
+                return Unauthorized();
+            }
+
+            // Here you might want to add additional checks to ensure the user has access to this company
+
+            var statistics = await bookingService.GetCompanyBookingsStatisticsAsync(companyId, startDate, endDate);
+            return Ok(statistics);
         }
     }
 }

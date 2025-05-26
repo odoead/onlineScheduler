@@ -3,6 +3,7 @@
     public class BookingEditRequestResult
     {
         public bool IsEdited { get; set; }
+        public DateTime StartDateUTC { get; set; }
 
     }
 }

@@ -13,9 +13,7 @@ namespace Shared
             _serviceProvider = serviceProvider;
         }
 
-        public async Task OnActionExecutionAsync(
-            ActionExecutingContext context,
-            ActionExecutionDelegate next)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
 
             // Validate each parameter that has a validator

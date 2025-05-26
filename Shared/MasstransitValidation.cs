@@ -64,8 +64,9 @@ namespace Shared
                                i.GetGenericTypeDefinition() == typeof(IValidator<>))
                         .GetGenericArguments()[0];
 
+                    services.AddScoped(typeof(IValidator<>).MakeGenericType(entityType), validatorType);
                     var filterType = typeof(MasstransitValidation<>).MakeGenericType(entityType);
-                    services.AddScoped(typeof(IFilter<ConsumeContext>).MakeGenericType(entityType), filterType);
+                    services.AddScoped(typeof(IFilter<>).MakeGenericType(typeof(ConsumeContext<>).MakeGenericType(entityType)), filterType);
                 }
             }
 

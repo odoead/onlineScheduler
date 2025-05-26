@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NotificationService.Entities
 {
-    public class Data
+    public class KVData
     {
         [Key]
         public int Id { get; set; }

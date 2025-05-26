@@ -1,5 +1,6 @@
 ﻿using CompanyService.DB;
 using CompanyService.DTO;
+using CompanyService.DTO.Worker;
 using CompanyService.Entities;
 using CompanyService.Interfaces;
 using MassTransit;
@@ -25,6 +26,7 @@ namespace CompanyService.Services
             bookingValidation = validationService;
             UserEmailclient = client;
         }
+
         public async Task<int> AddIntervalAsync(int WeekDay, TimeSpan StartTimeLOC, TimeSpan FinishTimeLOC, int IntervalType, string EmployeeId, int CompanyId)
         {
 
@@ -32,7 +34,7 @@ namespace CompanyService.Services
             {
                 throw new BadRequestException("This interval overlaps with an existing interval.");
             }
-            if (await IsIntervalInCompanyWorkHoursRange(CompanyId, StartTimeLOC, FinishTimeLOC))
+            if (!await IsIntervalInCompanyWorkHoursRange(CompanyId, StartTimeLOC, FinishTimeLOC))
             {
                 throw new BadRequestException("Interval is out of the company working hours bounds ");
             }
@@ -55,7 +57,8 @@ namespace CompanyService.Services
 
         public async Task<bool> UpdateIntervalAsync(int Id, TimeSpan StartTimeLOC, TimeSpan FinishTimeLOC)
         {
-            var interval = await dbcontext.ScheduleIntervals.Include(q => q.Company).Include(q => q.Bookings).Include(q => q.Worker).ThenInclude(q => q.CompanyWorkAssignments).ThenInclude(q => q.Company)
+            var interval = await dbcontext.ScheduleIntervals.Include(q => q.Company).Include(q => q.Bookings).Include(q => q.Worker)
+                .ThenInclude(q => q.CompanyWorkAssignments).ThenInclude(q => q.Company)
                 .Where(q => q.Id == Id).FirstOrDefaultAsync();
             if (interval == null) return false;
 
@@ -66,12 +69,12 @@ namespace CompanyService.Services
             if (hasActiveBookings)
                 throw new BadRequestException("Cannot update interval with active or future bookings.");
 
-            if (await IsOverlappingIntervalAsync(interval.StartTimeLOC, interval.FinishTimeLOC, (int)interval.WeekDay, interval.WorkerId))
+            if (await IsOverlappingIntervalAsync(interval.StartTimeLOC, interval.FinishTimeLOC, (int)interval.WeekDay, interval.WorkerId, Id))
             {
                 throw new BadRequestException("The interval overlaps with an existing interval.");
             }
 
-            if (await IsIntervalInCompanyWorkHoursRange(interval.CompanyId, interval.StartTimeLOC, interval.FinishTimeLOC))
+            if (!await IsIntervalInCompanyWorkHoursRange(interval.CompanyId, interval.StartTimeLOC, interval.FinishTimeLOC))
             {
                 throw new BadRequestException("Interval is out of the company working hours bounds ");
             }
@@ -113,15 +116,10 @@ namespace CompanyService.Services
             return true;
         }
 
-        public async Task<List<ScheduleIntervalDTO>> GetWeeklyScheduleWithBookingsAsync(string employeeId, DateTime currentDateLOC)
-        {
-            var currentWeekStart = currentDateLOC.AddDays(-(int)DateTime.Today.DayOfWeek + (int)DayOfWeek.Monday);
 
-            // If today is Sunday, the currentWeekStart will go back to the previous Monday
-            if (DateTime.Today.DayOfWeek == DayOfWeek.Sunday)
-            {
-                currentWeekStart = currentWeekStart.AddDays(-7);
-            }
+        public async Task<List<ScheduleIntervalDTO>> GetEmployeeCurrentWeekScheduleWithBookingsAsync(string employeeId, DateTime currentDateLOC)
+        {
+            var currentWeekStart = GetWeeksMondayByWeekPassedDate(currentDateLOC);
             var currentWeekEnd = currentWeekStart.AddDays(7);
 
             var scheduleIntervals = await dbcontext.ScheduleIntervals
@@ -154,10 +152,10 @@ namespace CompanyService.Services
             return result;
         }
 
-        public async Task<List<ScheduleEmptyWindow>> GetEmptyScheduleTimeByDate(string employeeId, DateTime date)
+        //
+        public async Task<List<ScheduleEmptyWindow>> GetEmployeeEmptyScheduleTimeByDate(string employeeId, DateTime date)
         {
-            // Получаем день недели из переданной даты
-            int dayOfWeek = (int)date.DayOfWeek;
+            int dayOfWeek = (int)DayOfTheWeekExtensions.ToCustomDayOfWeek(date);
 
             var scheduleIntervals = await dbcontext.ScheduleIntervals.Include(q => q.Bookings)
                 .Where(q => q.WorkerId == employeeId && (int)q.WeekDay == dayOfWeek && q.IntervalType == (int)IntervalType.WORK)
@@ -228,11 +226,9 @@ namespace CompanyService.Services
                 }
             }
 
-            return availableSlots
-                .Where(slot => slot.Duration > TimeSpan.Zero)
-                .OrderBy(slot => slot.BeginTime)
-                .ToList();
+            return availableSlots.Where(slot => slot.Duration > TimeSpan.Zero).OrderBy(slot => slot.BeginTime).ToList();
         }
+
         private async Task<bool> IsIntervalInCompanyWorkHoursRange(int companyId, TimeSpan StartTime, TimeSpan FinishTime)
         {
             var company = await dbcontext.Companies.FirstOrDefaultAsync(q => q.Id == companyId);
@@ -256,7 +252,9 @@ namespace CompanyService.Services
             );
         }
 
-        public async Task<List<ScheduleIntervalDTO>> GetWeeklyScheduleWithBookingsAsync_Email(string Email, DateTime currentDateLOC)
+
+
+        public async Task<List<ScheduleIntervalDTO>> GetEmployeeCurrentWeekScheduleWithBookingsAsync_Email(string Email, DateTime currentDateLOC)
         {
             var response = await UserEmailclient.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = Email });
             string clientId;
@@ -272,7 +270,157 @@ namespace CompanyService.Services
                     throw new InvalidOperationException("Unknown response type received.");
             }
 
-            return await GetWeeklyScheduleWithBookingsAsync(clientId, currentDateLOC);
+            return await GetEmployeeCurrentWeekScheduleWithBookingsAsync(clientId, currentDateLOC);
+        }
+
+
+
+        //---
+        public async Task<List<List<ScheduleEmptyWindow>>> GetEmployeeCurrentWeekEmptyScheduleTime(string employeeId, DateTime currentDateLOC)
+        {
+            var currentWeekStart = GetWeeksMondayByWeekPassedDate(currentDateLOC);
+
+            var weeklyEmptySchedule = new List<List<ScheduleEmptyWindow>>();
+            for (int i = 1; i < 8; i++)
+            {
+                var day = currentWeekStart.AddDays(i);
+                var emptyWindows = await GetEmployeeEmptyScheduleTimeByDate(employeeId, day);
+                weeklyEmptySchedule.Add(emptyWindows);
+            }
+
+            return weeklyEmptySchedule;
+        }
+
+        public async Task<List<ScheduleIntervalDTO>> GetEmployeeWeeklyScheduleWithBookingsByWeekDayAsync(string employeeId, DateTime date)
+        {
+            // Find the Monday of the week containing the given date
+            var weekStart = GetWeeksMondayByWeekPassedDate(date);
+            return await GetEmployeeCurrentWeekScheduleWithBookingsAsync(employeeId, weekStart);
+        }
+
+        // Get the current week schedule for a company's workers
+        public async Task<List<WorkerEmptySchedulesDTO>> GetCompanyCurrentWeekEmptyScheduleTimeForProduct(int companyId, int productId, DateTime currentDateLOC)
+        {
+            var product = await dbcontext.Products.Include(p => p.AssignedWorkers).ThenInclude(pw => pw.Worker)
+                .FirstOrDefaultAsync(p => p.Id == productId && p.CompanyId == companyId) ??
+                throw new NotFoundException("Product not found with id " + productId);
+
+            var workerIds = product.AssignedWorkers.Select(pw => pw.WorkerId).ToList();
+            if (!workerIds.Any())
+                return new List<WorkerEmptySchedulesDTO>();
+
+            var currentDate = currentDateLOC.Date;
+            var workersSchedules = new List<WorkerEmptySchedulesDTO>();
+            foreach (var workerId in workerIds)
+            {
+                var workerSlots = await GetEmployeeEmptyScheduleTimeByDate(workerId, currentDate);
+                var validSlots = workerSlots.Where(slot => slot.Duration >= product.Duration).ToList();
+                workersSchedules.Add(new WorkerEmptySchedulesDTO
+                {
+                    WorkerId = workerId,
+                    WorkerName = product.AssignedWorkers.FirstOrDefault(q => q.WorkerId == workerId)?.Worker.FullName,
+                    EmptySchedules = validSlots,
+                });
+
+            }
+            return workersSchedules;
+        }
+
+        public async Task<List<WorkerScheduleIntervalDTO>> GetCompanyCurrentWeekScheduleWithBookingsAsync(int companyId, DateTime currentDateLOC)
+        {
+            var company = await dbcontext.Companies
+                .Include(c => c is SharedCompany ? ((SharedCompany)c).Workers : null)
+                .Include(c => c is PersonalCompany ? ((PersonalCompany)c).Worker : null)
+                .FirstOrDefaultAsync(c => c.Id == companyId) ??
+                throw new NotFoundException("Company not found with id " + companyId);
+
+            List<string> workerIds;
+            if (company is SharedCompany sharedCompany)
+            {
+                workerIds = sharedCompany.Workers.Select(w => w.WorkerId).ToList();
+            }
+            else if (company is PersonalCompany personalCompany)
+            {
+                workerIds = new List<string> { personalCompany.WorkerId };
+            }
+            else
+            {
+                throw new InvalidOperationException("Unknown company type");
+            }
+
+            var scheduleIntervals = await dbcontext.ScheduleIntervals
+                .Include(si => si.Bookings)
+                .Include(si => si.Worker)
+                .Where(si => si.CompanyId == companyId && workerIds.Contains(si.WorkerId))
+                .OrderBy(si => si.WeekDay)
+                .ThenBy(si => si.StartTimeLOC)
+                .ToListAsync();
+
+            var groupedByWorker = scheduleIntervals.GroupBy(si => si.WorkerId)
+                .Select(group => new WorkerScheduleIntervalDTO
+                {
+                    WorkerId = group.Key,
+                    WorkerName = group.First().Worker.FullName,
+                    EmptySchedules = group.Select(si => new ScheduleIntervalDTO
+                    {
+                        FinishTimeLOC = si.FinishTimeLOC,
+                        StartTimeLOC = si.StartTimeLOC,
+                        WeekDay = (int)si.WeekDay,
+                        Bookings = si.Bookings?.Select(b => new BookingDTO
+                        {
+                            EndDateLOC = b.EndDateLOC,
+                            ProductId = b.ProductId,
+                            ProductName = b.Product.Name,
+                            StartDateLOC = b.StartDateLOC
+                        }).ToList() ?? new List<BookingDTO>(),
+                        IntervalType = si.IntervalType
+                    }).ToList()
+                }).ToList();
+
+            return groupedByWorker;
+        }
+
+        // Find all available slots for each worker on the given date
+        public async Task<List<WorkerEmptySchedulesDTO>> GetCompanyEmptyScheduleTimeByDateForProduct(int companyId, DateTime date, int productId)
+        {
+            var product = await dbcontext.Products.Include(p => p.AssignedWorkers).ThenInclude(pw => pw.Worker).FirstOrDefaultAsync(p => p.Id == productId && p.CompanyId == companyId) ??
+                throw new NotFoundException("Product not found with id " + productId);
+
+            var workerIds = product.AssignedWorkers.Select(pw => pw.WorkerId).ToList();
+            if (!workerIds.Any())
+                return new List<WorkerEmptySchedulesDTO>();
+
+            var workersSchedules = new List<WorkerEmptySchedulesDTO>();
+            foreach (var workerId in workerIds)
+            {
+
+                var workerSlots = await GetEmployeeEmptyScheduleTimeByDate(workerId, date);
+                var validSlots = workerSlots.Where(slot => slot.Duration >= product.Duration).ToList();
+                workersSchedules.Add(new WorkerEmptySchedulesDTO
+                {
+                    WorkerId = workerId,
+                    WorkerName = product.AssignedWorkers.FirstOrDefault(q => q.WorkerId == workerId)?.Worker.FullName,
+                    EmptySchedules = validSlots
+                });
+
+            }
+            return workersSchedules;
+        }
+
+        public async Task<List<WorkerScheduleIntervalDTO>> GetCompanyWeeklyScheduleWithBookingsByWeekDayAsync(int companyId, DateTime date)
+        {
+            var weekStart = GetWeeksMondayByWeekPassedDate(date);
+            return await GetCompanyCurrentWeekScheduleWithBookingsAsync(companyId, weekStart);
+        }
+
+        private DateTime GetWeeksMondayByWeekPassedDate(DateTime currentDateLOC)
+        {
+            var currentWeekStart = currentDateLOC.AddDays(-(int)currentDateLOC.DayOfWeek + (int)DayOfWeek.Monday);
+            if (currentDateLOC.DayOfWeek == DayOfWeek.Sunday)
+            {
+                currentWeekStart = currentWeekStart.AddDays(-7);
+            }
+            return currentWeekStart;
         }
     }
 }

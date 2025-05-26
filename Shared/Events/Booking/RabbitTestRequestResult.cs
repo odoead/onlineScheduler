@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shared.Events.Booking
+﻿namespace Shared.Events.Booking
 {
     public class RabbitTestRequestResult
     {
-        public string returnVal {  get; set; }
+        public string returnVal { get; set; }
     }
 }

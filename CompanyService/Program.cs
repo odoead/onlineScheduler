@@ -22,6 +22,8 @@ builder.Services.AddMassTransit(x =>
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("company", false));
     x.AddRequestClient<UserEmailRequested>();
     x.AddRequestClient<WorkerBookingsRequested>();
+    x.AddRequestClient<GetClientBookingsRequested>();
+    x.AddRequestClient<BookingStatisticsRequest>();
 
     x.UsingRabbitMq((context, cfg) =>
     {

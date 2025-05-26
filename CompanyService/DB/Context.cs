@@ -18,6 +18,7 @@ namespace CompanyService.DB
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<CompanyWorker> СompanyWorkers { get; set; }
+        public DbSet<ProductWorker> ProductWorkers { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<ScheduleInterval> ScheduleIntervals { get; set; }
 
@@ -43,7 +44,7 @@ namespace CompanyService.DB
                 .HasForeignKey(cw => cw.WorkerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<ProductWorker>()
+            builder.Entity<ProductWorker>()// продук может не иметь работника и работник не обязательно должен иметь продукт при этом не удалятся 
                 .HasKey(cw => new { cw.ProductId, cw.WorkerId });
             builder.Entity<ProductWorker>()
                 .HasOne(cw => cw.Product)

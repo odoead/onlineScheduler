@@ -6,6 +6,8 @@
         public Task EditBookingAsync(int Id, DateTime BookingTimeLOC, string WorkerId);
         public Task ChangeBookingStatusAsync(int bookingId, int newStatus);
         public Task<string> GetRabbitDataTest();
-
+        public Task CancelBookingAsync(int bookingId);
+        ///TODO
+        
     }
 }
