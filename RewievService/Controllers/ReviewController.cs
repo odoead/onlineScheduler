@@ -4,7 +4,7 @@ using ReviewService.DTO;
 using ReviewService.Interface;
 
 namespace RewievService.Controllers
-{    //https://claude.ai/chat/d27f2456-c5b6-4d56-9901-ea37713d6d41
+{    
 
     [ApiController]
     [Route("api/[controller]")]
