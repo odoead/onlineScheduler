@@ -14,8 +14,8 @@ namespace BookingService.Services
     {
         private readonly Context dbcontext;
         private readonly IPublishEndpoint publishEndpoint;
-        private readonly IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// check if booking can be created
-        private readonly IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// create booking and produce success-fail
+        private readonly IRequestClient<IsValidBookingTimeRequested> IsValidBookingTimeClient;// To check if booking can be created
+        private readonly IRequestClient<BookingConfirmationRequested> BookingConfirmationclient;// To create booking and produce success-fail
         private readonly IRequestClient<UserEmailRequested> UserEmailclient;
         private readonly IRequestClient<BookingEditRequest> BookingEditClient;
         private readonly IRequestClient<RabbitTestRequest> RabbitTestClient;
@@ -111,7 +111,7 @@ namespace BookingService.Services
             var tzInfo = await companyTimeZoneClient.GetResponse<GetCompanyTimeZoneResult>(new GetCompanyTimeZoneRequest { ProductId = booking.ProductId });
             var StartDateUTC = TimeZoneInfo.ConvertTimeToUtc(BookingTimeLOC, tzInfo.Message.TimeZone);
 
-            var duration = booking.EndDateUTC - booking.StartDateUTC;//calculate duration based on start-end diff
+            var duration = booking.EndDateUTC - booking.StartDateUTC;// calculate duration based on start-end diff
             var response = await BookingEditClient.GetResponse<BookingEditRequestResult>(new BookingEditRequest
             {
                 StartDateLOC = BookingTimeLOC,

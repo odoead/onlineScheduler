@@ -12,18 +12,18 @@ namespace IdentityService
 {
     public class CustomProfileService : IProfileService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IRequestClient<UserCompanyRolesRequested> _client;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly IRequestClient<UserCompanyRolesRequested> client;
 
 
         public CustomProfileService(UserManager<ApplicationUser> userManager, IRequestClient<UserCompanyRolesRequested> client)
         {
-            _userManager = userManager;
-            _client = client;
+            this.userManager = userManager;
+            this.client = client;
         }
         public async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
-            var user = await _userManager.GetUserAsync(context.Subject);
+            var user = await userManager.GetUserAsync(context.Subject);
 
             if (user == null)
                 return;
@@ -34,11 +34,11 @@ namespace IdentityService
             };
 
             // Add role claims
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await userManager.GetRolesAsync(user);
             claims.AddRange(roles.Select(role => new Claim(JwtClaimTypes.Role, role)));
 
             //Add company role claims
-            var companyRoles = await _client.GetResponse<UserCompanyRolesRequestResult>(new UserCompanyRolesRequested { UserId = user.Id });
+            var companyRoles = await client.GetResponse<UserCompanyRolesRequestResult>(new UserCompanyRolesRequested { UserId = user.Id });
             claims.AddRange(companyRoles.Message.Roles.Select(role => new Claim("company_role", role.Key + "_" + role.Value)));
 
             // Include the claims in the issued token
@@ -48,7 +48,7 @@ namespace IdentityService
         public async Task IsActiveAsync(IsActiveContext context)
         {
             var sub = context.Subject.GetSubjectId();
-            var user = await _userManager.FindByIdAsync(sub);
+            var user = await userManager.FindByIdAsync(sub);
             context.IsActive = user != null;
         }
     }

@@ -5,18 +5,18 @@ namespace ChatService.Services
 {
     public class TypingIndicatorService : ITypingIndicatorService
     {
-        private readonly IConnectionMultiplexer _redis;
+        private readonly IConnectionMultiplexer redis;
         private const string TYPING_PREFIX = "typing:";
         private const int TYPING_EXPIRY_SECONDS = 5; // Typing indicator expires after 5 seconds
 
         public TypingIndicatorService(IConnectionMultiplexer redis)
         {
-            _redis = redis;
+            this.redis = redis;
         }
 
         public async Task SetUserTypingAsync(string userId, string recipientId, string groupId = null)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             string key;
 
             if (groupId != null)
@@ -28,13 +28,13 @@ namespace ChatService.Services
                 key = $"{TYPING_PREFIX}{recipientId}:{userId}";
             }
 
-            //set with expiry-automatically removes typing indicator after timeout expries
+            // Set with expiry-automatically removes typing indicator after timeout expries
             await db.StringSetAsync(key, "1", TimeSpan.FromSeconds(TYPING_EXPIRY_SECONDS));
         }
 
         public async Task<bool> IsUserTypingAsync(string userId, string recipientId, string groupId = null)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             string key;
 
             if (groupId != null)
@@ -51,7 +51,7 @@ namespace ChatService.Services
 
         public async Task<List<string>> GetTypingUsersAsync(string recipientId, string groupId = null)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             string pattern;
 
             if (groupId != null)
@@ -66,7 +66,7 @@ namespace ChatService.Services
             var typingUsers = new List<string>();
 
             // Use server-side scanning for efficiency
-            var server = _redis.GetServer(_redis.GetEndPoints().First());
+            var server = redis.GetServer(redis.GetEndPoints().First());
             var keys = server.Keys(pattern: pattern);
 
             foreach (var key in keys)

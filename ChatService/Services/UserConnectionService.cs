@@ -6,18 +6,18 @@ namespace ChatService.Services
     // Redis-based implementation for UserConnectionService
     public class UserConnectionService : IUserConnectionService
     {
-        private readonly IConnectionMultiplexer _redis;
+        private readonly IConnectionMultiplexer redis;
         private const string CONNECTION_PREFIX = "connection:";
         private const string USER_PREFIX = "user:";
 
         public UserConnectionService(IConnectionMultiplexer redis)
         {
-            _redis = redis;
+            this.redis = redis;
         }
 
         public async Task AddConnectionAsync(string connectionId, string userId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
 
             // Map connection ID to user ID
             await db.StringSetAsync($"{CONNECTION_PREFIX}{connectionId}", userId);
@@ -31,7 +31,7 @@ namespace ChatService.Services
 
         public async Task RemoveConnectionAsync(string connectionId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             string userId = await db.StringGetAsync($"{CONNECTION_PREFIX}{connectionId}");
 
             if (!string.IsNullOrEmpty(userId))
@@ -53,21 +53,21 @@ namespace ChatService.Services
 
         public async Task<bool> IsUserOnlineAsync(string userId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             long connectionCount = await db.SetLengthAsync($"{USER_PREFIX}{userId}");
             return connectionCount > 0;
         }
 
         public async Task<List<string>> GetUserConnectionsAsync(string userId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             var connections = await db.SetMembersAsync($"{USER_PREFIX}{userId}");
             return connections.Select(c => c.ToString()).ToList();
         }
 
         public async Task<List<string>> GetOnlineUsersAsync(List<string> userIds)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             var result = new List<string>();
 
             foreach (var userId in userIds)
@@ -84,7 +84,7 @@ namespace ChatService.Services
 
         public async Task<DateTime?> GetLastActiveTimeAsync(string userId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
 
             if (await IsUserOnlineAsync(userId))
             {
@@ -108,7 +108,7 @@ namespace ChatService.Services
 
         public async Task UpdateUserActivityAsync(string userId)
         {
-            var db = _redis.GetDatabase();
+            var db = redis.GetDatabase();
             await db.HashSetAsync($"{USER_PREFIX}{userId}:info", "lastActive", DateTime.UtcNow.Ticks.ToString());
         }
     }

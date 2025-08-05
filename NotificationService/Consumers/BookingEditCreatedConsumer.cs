@@ -173,7 +173,8 @@ namespace NotificationService.Consumers
         {
             var reminderTimeUTC = bookingStartDateUTC.AddMinutes(-reminderMinutes);
             var timeUntilBookingStart = (bookingStartDateUTC - DateTime.UtcNow).TotalMinutes;
-            //check if the client's booking is too close to create notification for it
+
+            // Check if the client's booking is too close to create notification for it
             if (companySettings.TryGetValue("TimeBeforeBookingStartWhenNotScheduleNotifyClientInMinutes_OnBookingCreated", out var minNotifySetting) && int.TryParse(minNotifySetting, out var minNotify)
                 && timeUntilBookingStart < minNotify)
             {

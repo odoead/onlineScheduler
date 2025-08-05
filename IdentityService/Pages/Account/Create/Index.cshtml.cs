@@ -18,10 +18,10 @@ namespace IdentityServerHost.Pages.Create;
 [AllowAnonymous]
 public class Index : PageModel
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly IIdentityServerInteractionService _interaction;
-    private readonly IEventService _events;
+    private readonly UserManager<ApplicationUser> userManager;
+    private readonly SignInManager<ApplicationUser> signInManager;
+    private readonly IIdentityServerInteractionService interaction;
+    private readonly IEventService events;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
@@ -32,10 +32,10 @@ public class Index : PageModel
         IIdentityServerInteractionService interaction,
         IEventService events)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _interaction = interaction;
-        _events = events;
+        this.userManager = userManager;
+        this.signInManager = signInManager;
+        this.interaction = interaction;
+        this.events = events;
     }
 
     public IActionResult OnGet(string returnUrl)
@@ -49,7 +49,7 @@ public class Index : PageModel
         Input = new InputModel { ReturnUrl = returnUrl };
 
         // check if we are in the context of an authorization request
-        var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
+        var context = await interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
 
         // the user clicked the "cancel" button
         if (Input.Button != "create")
@@ -59,7 +59,7 @@ public class Index : PageModel
                 // if the user cancels, send a result back into IdentityServer as if they 
                 // denied the consent (even if this client does not require consent).
                 // this will send back an access denied OIDC error response to the client.
-                await _interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
+                await interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
 
                 // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
                 if (context.IsNativeClient())
@@ -79,7 +79,7 @@ public class Index : PageModel
         }
 
         // Check if username already exists
-        var existingUser = await _userManager.FindByNameAsync(Input.Username);
+        var existingUser = await userManager.FindByNameAsync(Input.Username);
         if (existingUser != null)
         {
             ModelState.AddModelError("Input.Username", "Username already exists");
@@ -94,20 +94,20 @@ public class Index : PageModel
                 EmailConfirmed = true
             };
 
-            var result = await _userManager.CreateAsync(user, Input.Password);
+            var result = await userManager.CreateAsync(user, Input.Password);
             if (result.Succeeded)
             {
-                await _userManager.AddClaimsAsync(user, new Claim[]
+                await userManager.AddClaimsAsync(user, new Claim[]
                 {
                     new Claim(JwtClaimTypes.Name, Input.Username),
                     new Claim(JwtClaimTypes.Email, Input.Email)
                 });
 
                 // Log the event
-                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
+                await events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
 
                 //auto signin   user
-                await _signInManager.SignInAsync(user, isPersistent: false);
+                await signInManager.SignInAsync(user, isPersistent: false);
 
                 if (Input.ReturnUrl != null)
                 {

@@ -13,7 +13,7 @@ namespace NotificationService.Entities
         public NotificationStatus Status { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTime CreatedAtUTC { get; set; }//messagecreatedat
+        public DateTime CreatedAtUTC { get; set; }
         public DateTime? DeliveredAtUTC { get; set; }
         public DateTime? ReadAtUTC { get; set; }
         public List<KVData> NotificationKeyValues { get; set; }

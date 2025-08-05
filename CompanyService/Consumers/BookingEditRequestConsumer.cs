@@ -28,7 +28,7 @@ namespace CompanyService.Consumers
 
             if (message.WorkerId == booking.WorkerId)
             {
-                // same worker overlap check
+                // Same worker overlap check
                 if (await validationService.HasOverlappingBookings(
                     booking.WorkerId,
                     message.StartDateLOC,
@@ -40,7 +40,7 @@ namespace CompanyService.Consumers
             }
             else
             {
-                //new worker overlap check
+                // New worker overlap check
                 if (await validationService.HasOverlappingBookings(
                     message.WorkerId,
                     message.StartDateLOC,

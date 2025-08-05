@@ -15,14 +15,14 @@ namespace CompanyService.Services
     public class ScheduleServ : IScheduleService
     {
         private readonly Context dbcontext;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IPublishEndpoint publishEndpoint;
         private readonly IBookingValidationService bookingValidation;
         private readonly IRequestClient<UserEmailRequested> UserEmailclient;
 
         public ScheduleServ(Context context, IPublishEndpoint publishEndpoint, IBookingValidationService validationService, IRequestClient<UserEmailRequested> client)
         {
             dbcontext = context;
-            _publishEndpoint = publishEndpoint;
+            this.publishEndpoint = publishEndpoint;
             bookingValidation = validationService;
             UserEmailclient = client;
         }
@@ -109,7 +109,7 @@ namespace CompanyService.Services
 
             dbcontext.ScheduleIntervals.Remove(interval);
             await dbcontext.SaveChangesAsync();
-            await _publishEndpoint.Publish(new ScheduleIntervalDeleted
+            await publishEndpoint.Publish(new ScheduleIntervalDeleted
             {
                 IntervalId = intervalId,
             });

@@ -21,6 +21,7 @@ namespace ChatService.Services
             this.publishEndpoint = eventPublisher;
         }
 
+        
         public async Task<ChatMessage> SaveMessageAsync(ChatMessage message)
         {
             dbcontext.Messages.Add(message);
@@ -251,7 +252,7 @@ namespace ChatService.Services
                 int.TryParse(currentCountStr, out currentCount);
             }
 
-            //minus but not below 0
+            // Minus but not below 0
             currentCount = Math.Max(0, currentCount - 1);
             await redisCache.SetStringAsync(redisKey, currentCount.ToString(), new DistributedCacheEntryOptions
             {

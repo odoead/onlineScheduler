@@ -55,7 +55,6 @@ namespace CompanyService.Controllers
                 return Unauthorized();
             }
 
-            // Here you might want to add additional checks to ensure the user has access to this company
 
             var statistics = await bookingService.GetCompanyBookingsStatisticsAsync(companyId, startDate, endDate);
             return Ok(statistics);

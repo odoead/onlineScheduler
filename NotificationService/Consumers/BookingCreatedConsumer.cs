@@ -14,15 +14,15 @@ namespace NotificationService.Consumers
     public class BookingCreatedConsumer : IConsumer<BookingCreated>
     {
         private readonly Context dbContext;
-        private readonly IRequestClient<UserIdRequested> _userClient;
-        private readonly IRequestClient<NotificationAdditionalDataRequested> _additionalDataClient;
+        private readonly IRequestClient<UserIdRequested> userClient;
+        private readonly IRequestClient<NotificationAdditionalDataRequested> additionalDataClient;
         private readonly INotificationService notificationService;
 
         public BookingCreatedConsumer(Context dbContext, IRequestClient<UserIdRequested> userClient, IRequestClient<NotificationAdditionalDataRequested> additionalDataClient, INotificationService notificationService)
         {
             this.dbContext = dbContext;
-            _userClient = userClient;
-            _additionalDataClient = additionalDataClient;
+            this.userClient = userClient;
+            this.additionalDataClient = additionalDataClient;
             this.notificationService = notificationService;
         }
 
@@ -41,7 +41,7 @@ namespace NotificationService.Consumers
         {
             var keyValues = new Dictionary<string, string>();
 
-            var additionalDataResponse = await _additionalDataClient.GetResponse<NotificationAdditionalDataRequestResult>(
+            var additionalDataResponse = await additionalDataClient.GetResponse<NotificationAdditionalDataRequestResult>(
                 new NotificationAdditionalDataRequested { ProductId = message.BookingProductId, });
             var additionalData = additionalDataResponse.Message.Data;
             foreach (var keyValue in additionalData)
@@ -49,13 +49,13 @@ namespace NotificationService.Consumers
                 keyValues[keyValue.Key] = keyValue.Value;
             }
 
-            var clientDataResponse = await _userClient.GetResponse<UserIdRequestResult>(new UserIdRequested { Id = message.BookingsClientId });
+            var clientDataResponse = await userClient.GetResponse<UserIdRequestResult>(new UserIdRequested { Id = message.BookingsClientId });
             if (clientDataResponse.Message is UserIdRequestedNotFoundResult)
             {
                 throw new BadRequestException($"Client with id {message.BookingsClientId} not found");
             }
 
-            var workerDataResponse = await _userClient.GetResponse<UserIdRequestResult, UserIdRequestedNotFoundResult>(new UserIdRequested { Id = message.BookingsWorkerId });
+            var workerDataResponse = await userClient.GetResponse<UserIdRequestResult, UserIdRequestedNotFoundResult>(new UserIdRequested { Id = message.BookingsWorkerId });
 
             string workerName = workerDataResponse.Message switch
             {

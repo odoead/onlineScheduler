@@ -8,20 +8,20 @@ namespace ReviewService
 {
     public class ReviewServ : IReviewService
     {
-        private readonly IReviewRepository _reviewRepository;
+        private readonly IReviewRepository reviewRepository;
         private readonly IPublishEndpoint publishEndpoint;
-        private readonly ILogger<ReviewServ> _logger;
+        private readonly ILogger<ReviewServ> logger;
 
         public ReviewServ(IReviewRepository reviewRepository, IPublishEndpoint publishEndpoint, ILogger<ReviewServ> logger)
         {
-            _reviewRepository = reviewRepository;
+            this.reviewRepository = reviewRepository;
             this.publishEndpoint = publishEndpoint;
-            _logger = logger;
+            this.logger = logger;
         }
 
         public async Task<ReviewDTO> GetReviewByIdAsync(int id)
         {
-            var review = await _reviewRepository.GetByIdAsync(id);
+            var review = await reviewRepository.GetByIdAsync(id);
             if (review == null)
                 return null;
 
@@ -30,26 +30,26 @@ namespace ReviewService
 
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByClientIdAsync(string clientId)
         {
-            var reviews = await _reviewRepository.GetByClientIdAsync(clientId);
+            var reviews = await reviewRepository.GetByClientIdAsync(clientId);
             return reviews.Select(r => MapToDto(r));
         }
 
         public async Task<(IEnumerable<ReviewDTO> Reviews, int TotalCount)> GetFilteredReviewsAsync(ReviewFilterDTO filter)
         {
-            var (reviews, totalCount) = await _reviewRepository.GetFilteredReviewsAsync(filter);
+            var (reviews, totalCount) = await reviewRepository.GetFilteredReviewsAsync(filter);
             var reviewDtos = reviews.Select(r => MapToDto(r));
             return (reviewDtos, totalCount);
         }
 
         public async Task<ReviewSummaryDTO> GetReviewSummaryAsync(string targetId, string targetType)
         {
-            return await _reviewRepository.GetReviewSummaryAsync(targetId, targetType);
+            return await reviewRepository.GetReviewSummaryAsync(targetId, targetType);
         }
 
         public async Task<ReviewDTO> SubmitReviewAsync(string clientId, SubmitReviewDTO reviewDto)
         {
             // Check if client already reviewed this target
-            var hasReviewed = await _reviewRepository.HasClientReviewedTargetAsync(
+            var hasReviewed = await reviewRepository.HasClientReviewedTargetAsync(
                 clientId, reviewDto.TargetId, reviewDto.TargetType);
 
             if (hasReviewed)
@@ -68,7 +68,7 @@ namespace ReviewService
                 SubmittedAt = DateTime.UtcNow
             };
 
-            var savedReview = await _reviewRepository.AddAsync(review);
+            var savedReview = await reviewRepository.AddAsync(review);
 
             // Publish event that a review was created
             await publishEndpoint.Publish(new ReviewCreated
@@ -86,7 +86,7 @@ namespace ReviewService
 
         public async Task<ReviewDTO> RespondToReviewAsync(int reviewId, string response)
         {
-            var review = await _reviewRepository.GetByIdAsync(reviewId);
+            var review = await reviewRepository.GetByIdAsync(reviewId);
             if (review == null)
                 throw new KeyNotFoundException("Review not found");
 
@@ -94,7 +94,7 @@ namespace ReviewService
             review.ResponseDate = DateTime.UtcNow;
             review.LastModifiedAt = DateTime.UtcNow;
 
-            var updatedReview = await _reviewRepository.UpdateAsync(review);
+            var updatedReview = await reviewRepository.UpdateAsync(review);
 
             // Publish event that a review response was added
             await publishEndpoint.Publish(new ReviewResponded
@@ -111,17 +111,17 @@ namespace ReviewService
 
         public async Task<bool> DeleteReviewAsync(int id, string clientId)
         {
-            var review = await _reviewRepository.GetByIdAsync(id);
+            var review = await reviewRepository.GetByIdAsync(id);
             if (review == null || review.ClientId != clientId)
             { return false; }
             if (review.IsDeleted)
             { return true; }
-            return await _reviewRepository.DeleteAsync(id);
+            return await reviewRepository.DeleteAsync(id);
         }
 
         public async Task<bool> CanClientReviewTargetAsync(string clientId, string targetId, string targetType)
         {
-            var hasActiveReview = await _reviewRepository.HasClientReviewedTargetAsync(clientId, targetId, targetType);
+            var hasActiveReview = await reviewRepository.HasClientReviewedTargetAsync(clientId, targetId, targetType);
             return !hasActiveReview;
         }
 

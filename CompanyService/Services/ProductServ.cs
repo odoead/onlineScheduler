@@ -13,14 +13,14 @@ namespace CompanyService.Services
     public class ProductServ : IProductService
     {
         private readonly Context dbcontext;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IPublishEndpoint publishEndpoint;
         private readonly IBookingValidationService bookingValidator;
 
         public ProductServ(Context context, IPublishEndpoint publishEndpoint, IBookingValidationService bookingValidator)
         {
             dbcontext = context;
 
-            _publishEndpoint = publishEndpoint;
+            this.publishEndpoint = publishEndpoint;
             this.bookingValidator = bookingValidator;
         }
         public async Task<int> AddProductAsync(string Name, string Description, TimeSpan Duration, int CompanyId, List<string> WorkerIds)

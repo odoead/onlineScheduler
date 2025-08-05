@@ -144,7 +144,7 @@ namespace NotificationService.Services
                     }
                 }
 
-                //calculate time until the appointment
+                // Calculate time until the appointment
                 DateTime startDate = DateTime.UtcNow;
                 var startDateKvUTC = bookingNotification.NotificationKeyValues.FirstOrDefault(kv => kv.Key == "startdateutc");
 
@@ -152,7 +152,6 @@ namespace NotificationService.Services
                 {
                     TimeSpan timeUntil = startDate - DateTime.UtcNow;
                     string timeDescription;
-                    //string 
                     if (timeUntil.TotalHours >= 1)
                     {
                         timeDescription = $"in {Math.Floor(timeUntil.TotalHours)} hour(s)";
@@ -186,7 +185,7 @@ namespace NotificationService.Services
             }
         }
 
-        ///batch process all near future notifications
+        /// Batch process all near future notifications
         public async Task SendUpcomingAppointmentReminders()
         {
             var currentTime = DateTime.UtcNow;

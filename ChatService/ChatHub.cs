@@ -27,12 +27,11 @@ namespace ChatService
             var userId = Context.UserIdentifier;
             if (string.IsNullOrEmpty(userId))
             {
-                //if user connected with no valid identifier 
+                // If user connected with no valid identifier 
                 Context.Abort();
                 return;
             }
 
-            // Register connection in Redis
             await userConnectionService.AddConnectionAsync(Context.ConnectionId, userId);
 
             // Join user's personal channel for receiving messages
@@ -45,7 +44,6 @@ namespace ChatService
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"group:{group.Id}");
             }
 
-            // Notify others that user came online
             await Clients.Others.SendAsync("UserOnline", userId);
 
             await base.OnConnectedAsync();
@@ -55,7 +53,6 @@ namespace ChatService
         {
             var userId = Context.UserIdentifier;
 
-            // Remove connection from Redis
             await userConnectionService.RemoveConnectionAsync(Context.ConnectionId);
 
             // Check if user has other active connections
@@ -71,7 +68,7 @@ namespace ChatService
         }
 
         // Direct messaging
-        public async Task SendMessage(string recipientId, string messageText)
+        public async Task SendDirectMessage(string recipientId, string messageText)
         {
             var senderId = Context.UserIdentifier;
 
@@ -82,7 +79,7 @@ namespace ChatService
                 RecipientId = recipientId,
                 Text = messageText,
                 IsRead = false,
-                SentAt = DateTime.UtcNow
+                SentAt = DateTime.UtcNow,
             };
 
             await chatService.SaveMessageAsync(message);
@@ -115,7 +112,6 @@ namespace ChatService
                 SentAt = DateTime.UtcNow
             };
 
-            // Save message to database
             await chatService.SaveMessageAsync(message);
 
             // Send to all members of the group
@@ -123,7 +119,7 @@ namespace ChatService
 
         }
 
-        // Join a group
+
         public async Task JoinGroup(string groupId)
         {
             var userId = Context.UserIdentifier;
@@ -174,15 +170,6 @@ namespace ChatService
         }
 
 
-
-
-
-
-
-
-
-
-        // Mark messages as read
         public async Task MarkMessageAsRead(Guid messageId)
         {
             await chatService.MarkAsReadAsync(messageId);
@@ -209,13 +196,11 @@ namespace ChatService
 
         }
 
-        // Get online status
         public async Task<bool> IsUserOnline(string userId)
         {
             return await userConnectionService.IsUserOnlineAsync(userId);
         }
 
-        // Get unread message counts
         public async Task<int> GetUnreadCount(string chatWithUserId)
         {
             var userId = Context.UserIdentifier;

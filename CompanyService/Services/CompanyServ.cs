@@ -17,14 +17,14 @@ namespace CompanyService.Services
     {
         private readonly Context dbcontext;
         private readonly IPublishEndpoint publishEndpoint;
-        private readonly IRequestClient<UserEmailRequested> _client;
+        private readonly IRequestClient<UserEmailRequested> client;
         private readonly IBookingValidationService bookingValidator;
 
         public CompanyServ(Context context, IPublishEndpoint publishEndpoint, IRequestClient<UserEmailRequested> client, IBookingValidationService bookingValidator)
         {
             dbcontext = context;
             this.publishEndpoint = publishEndpoint;
-            _client = client;
+            this.client = client;
             this.bookingValidator = bookingValidator;
         }
 
@@ -261,7 +261,7 @@ namespace CompanyService.Services
 
         private async Task<UserEmailRequestResult> GetUserData(string email)
         {
-            var response = await _client.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = email });
+            var response = await client.GetResponse<UserEmailRequestResult, UserEmailRequestedNotFoundResult>(new UserEmailRequested { Email = email });
             switch (response)
             {
                 case var r when r.Message is UserEmailRequestResult result:

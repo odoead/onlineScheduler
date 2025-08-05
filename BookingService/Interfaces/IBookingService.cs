@@ -8,6 +8,6 @@
         public Task<string> GetRabbitDataTest();
         public Task CancelBookingAsync(int bookingId);
         ///TODO
-        
+
     }
 }

@@ -11,20 +11,20 @@ namespace RewievService.Controllers
     [Authorize]
     public class ReviewsController : ControllerBase
     {
-        private readonly IReviewService _reviewService;
-        private readonly ILogger<ReviewsController> _logger;
+        private readonly IReviewService reviewService;
+        private readonly ILogger<ReviewsController> logger;
 
         public ReviewsController(IReviewService reviewService, ILogger<ReviewsController> logger)
         {
-            _reviewService = reviewService;
-            _logger = logger;
+            this.reviewService = reviewService;
+            this.logger = logger;
         }
 
         [HttpGet("{id}")]
         [Authorize(Policy = "ReviewReadPolicy")]
         public async Task<ActionResult<ReviewDTO>> GetReview(int id)
         {
-            var review = await _reviewService.GetReviewByIdAsync(id);
+            var review = await reviewService.GetReviewByIdAsync(id);
             if (review == null)
                 return NotFound();
 
@@ -39,7 +39,7 @@ namespace RewievService.Controllers
             if (string.IsNullOrEmpty(clientId))
                 return Unauthorized();
 
-            var reviews = await _reviewService.GetReviewsByClientIdAsync(clientId);
+            var reviews = await reviewService.GetReviewsByClientIdAsync(clientId);
             return Ok(reviews);
         }
 
@@ -62,7 +62,7 @@ namespace RewievService.Controllers
                 PageSize = pageSize
             };
 
-            var (reviews, totalCount) = await _reviewService.GetFilteredReviewsAsync(filter);
+            var (reviews, totalCount) = await reviewService.GetFilteredReviewsAsync(filter);
 
             Response.Headers.Add("X-Total-Count", totalCount.ToString());
 
@@ -78,7 +78,7 @@ namespace RewievService.Controllers
             if (string.IsNullOrEmpty(targetId) || string.IsNullOrEmpty(targetType))
                 return BadRequest("Target ID and Target Type are required");
 
-            var summary = await _reviewService.GetReviewSummaryAsync(targetId, targetType);
+            var summary = await reviewService.GetReviewSummaryAsync(targetId, targetType);
             return Ok(summary);
         }
 
@@ -97,18 +97,18 @@ namespace RewievService.Controllers
                     return BadRequest("Invalid target type. Must be either 'WORKER' or 'PRODUCT'");
 
                 // Check if client can review this target
-                var canReview = await _reviewService.CanClientReviewTargetAsync(
+                var canReview = await reviewService.CanClientReviewTargetAsync(
                     clientId, reviewDto.TargetId, reviewDto.TargetType);
 
                 if (!canReview)
                     return BadRequest("You have already reviewed this target");
 
-                var review = await _reviewService.SubmitReviewAsync(clientId, reviewDto);
+                var review = await reviewService.SubmitReviewAsync(clientId, reviewDto);
                 return CreatedAtAction(nameof(GetReview), new { id = review.Id }, review);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error submitting review");
+                logger.LogError(ex, "Error submitting review");
                 return BadRequest(ex.Message);
             }
         }
@@ -123,7 +123,7 @@ namespace RewievService.Controllers
                 // to respond to this review (e.g., they own the business/are the worker)
                 // This would typically involve checking claims or making a service call
 
-                var review = await _reviewService.RespondToReviewAsync(id, responseDto.Response);
+                var review = await reviewService.RespondToReviewAsync(id, responseDto.Response);
                 return Ok(review);
             }
             catch (KeyNotFoundException)
@@ -132,7 +132,7 @@ namespace RewievService.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error responding to review");
+                logger.LogError(ex, "Error responding to review");
                 return BadRequest(ex.Message);
             }
         }
@@ -145,7 +145,7 @@ namespace RewievService.Controllers
             if (string.IsNullOrEmpty(clientId))
                 return Unauthorized();
 
-            var success = await _reviewService.DeleteReviewAsync(id, clientId);
+            var success = await reviewService.DeleteReviewAsync(id, clientId);
             if (!success)
                 return NotFound();
 
