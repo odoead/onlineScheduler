@@ -53,7 +53,7 @@ namespace CompanyService.Controllers
             return NoContent();
         }
 
-        [HttpGet("weekly/{employeeId}")]
+        [HttpGet("employee/{employeeId}/week")]
         [Authorize]
         public async Task<IActionResult> GetWeeklySchedule(string employeeId, [FromQuery] DateTime currentDateLOC)
         {
@@ -61,7 +61,7 @@ namespace CompanyService.Controllers
             return Ok(schedule);
         }
 
-        [HttpGet("weekly")]
+        [HttpGet("employee/week")]
         [Authorize]
         public async Task<IActionResult> GetWeeklySchedule_Email([FromQuery] DateTime currentDateLOC)
         {
@@ -75,7 +75,7 @@ namespace CompanyService.Controllers
             return Ok(schedule);
         }
 
-        [HttpGet("available/{employeeId}")]
+        [HttpGet("employee/{employeeId}/available")]
         [Authorize]
         public async Task<IActionResult> GetAvailableSlots(string employeeId, [FromQuery] DateTime date)
         {
@@ -99,19 +99,19 @@ namespace CompanyService.Controllers
             return Ok(schedule);
         }
 
-        [HttpGet("company/{companyId}/product/{productId}/week-empty")]
-        [Authorize]
-        public async Task<IActionResult> GetCompanyCurrentWeekEmptyScheduleTimeForProduct(int companyId, int productId, [FromQuery] DateTime currentDateLOC)
-        {
-            var schedule = await scheduleService.GetCompanyCurrentWeekEmptyScheduleTimeForProduct(companyId, productId, currentDateLOC);
-            return Ok(schedule);
-        }
-
         [HttpGet("company/{companyId}/week")]
         [Authorize]
         public async Task<IActionResult> GetCompanyCurrentWeekScheduleWithBookings(int companyId, [FromQuery] DateTime currentDateLOC)
         {
             var schedule = await scheduleService.GetCompanyCurrentWeekScheduleWithBookingsAsync(companyId, currentDateLOC);
+            return Ok(schedule);
+        }
+
+        [HttpGet("company/{companyId}/product/{productId}/week-empty")]
+        [Authorize]
+        public async Task<IActionResult> GetCompanyCurrentWeekEmptyScheduleTimeForProduct(int companyId, int productId, [FromQuery] DateTime currentDateLOC)
+        {
+            var schedule = await scheduleService.GetCompanyCurrentWeekEmptyScheduleTimeForProduct(companyId, productId, currentDateLOC);
             return Ok(schedule);
         }
 
